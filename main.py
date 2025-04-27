@@ -17,6 +17,7 @@ mysql = MySQL(app)
 
 @app.route('/')
 
+#Login Page
 @app.route('/login', methods=['GET', 'POST']) #Log in page
 def login():
     if request.method == 'POST':
@@ -50,6 +51,7 @@ def login():
 
     return render_template('login.html')
 
+#Admin Dashboard
 @app.route('/admin_dashboard')
 def admin_dashboard():
     if 'user_id' not in session or not session.get('is_admin'):
@@ -64,12 +66,15 @@ def admin_dashboard():
     # Get all admins
     cursor.execute('SELECT * FROM admin')
     admins = cursor.fetchall()
+
+    cursor.execute('SELECT * FROM wearhouse')
+    wh = cursor.fetchall()
     
     cursor.close()
-    return render_template('admin_dashboard.html', users=users, admins=admins)
+    return render_template('admin_dashboard.html', users=users, admins=admins, wh = wh)
 
-## edit the admin table
-@app.route('/add_admin')
+## Go to the Admin edit page
+@app.route('/admin_dashboard/add_admin')
 def add_admin():
     if 'user_id' not in session or not session.get('is_admin'):
         return redirect(url_for('login'))
@@ -77,16 +82,18 @@ def add_admin():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('SELECT * FROM admin')
     admins = cursor.fetchall()
+    cursor.close()
     return render_template('add_admin.html', admins=admins)
 
+#Logout system
 @app.route('/logout')
 def logout():
     session.clear()
     session['is_admin'] = False
     return redirect(url_for('login'))
 
-
-@app.route('/add_admin/create', methods=['POST'])
+#make a new admin
+@app.route('/admin_dashboard/add_admin/create', methods=['POST'])
 def create_admin():
     if 'user_id' not in session or not session.get('is_admin'):
         return redirect(url_for('login'))
@@ -118,5 +125,48 @@ def create_admin():
     
     return redirect(url_for('add_admin'))
 
+#delete an admin
+@app.route('/admin_dashboard/add_admin/delete/<int:AdminID>', methods=['POST'])
+def delete_admin(AdminID):
+    if request.method == 'POST':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('DELETE FROM admin WHERE AdminID = %s', (AdminID,))
+        mysql.connection.commit()
+        cursor.close()
+        flash("Admin deleted successfully!", "success")
+        return redirect(url_for('add_admin'))
+
+##Create Wearhouse
+@app.route('/admin_dashboard/createwh', methods=['POST'])
+def create_wearhouse():  
+    area = request.form['Area']
+    city = request.form['City']
+    a_id = request.form['AdminID']
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    try:
+        cursor.execute('SELECT COUNT(*) as count FROM wearhouse')
+        next_id = cursor.fetchone()['count'] + 1
+        
+        cursor.execute(
+            'INSERT INTO wearhouse (WearhouseID, Area, City, AdminID) VALUES (%s, %s, %s, %s)',
+            (next_id, area, city, a_id)
+        )
+        
+        mysql.connection.commit()
+        flash('New site created successfully!', 'success')
+    except Exception as e:
+        mysql.connection.rollback()
+        flash('Failed to create site.', 'danger')
+        print(e)
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('admin_dashboard'))
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
+    

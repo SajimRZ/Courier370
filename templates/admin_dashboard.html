@@ -19,8 +19,8 @@
         </div>
     </nav>
 
+    <!-- List of Admins -->
     <div class="container my-4">
-         
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">Admins List</h5>
@@ -47,6 +47,8 @@
                     </table>
                 </div>
                 <div class="row g-3">
+
+                    <!-- The edit button -->
                     <div class="col-12">
                         <a href="{{ url_for('add_admin') }}" class="btn btn-success">Edit</a>
                     </div>
@@ -54,7 +56,9 @@
             </div>
         </div>
         
-        <div class="card">
+        <div></div>
+        <!-- User List -->
+        <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">Users List</h5>
             </div>
@@ -83,6 +87,87 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div>
+
+        </div>
+        <!-- WearHouse List-->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Wearhouse Sites</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>WearhouseID</th>
+                                <th>Area</th>
+                                <th>City</th>
+                                <th>Admin ID</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for WH in wh %}
+                            <tr>
+                                <td>{{ WH.WearhouseID }}</td>
+                                <td>{{ WH.Area }}</td>
+                                <td>{{ WH.City }}</td>
+                                <td>{{ WH.AdminID }}</td>
+                                <td>
+                                    
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Create New Site</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('create_wearhouse') }}" method="post">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="Area" class="form-label">Area</label>
+                            <input type="Area" class="form-control" id="Area" name="Area" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="City" class="form-label">City</label>
+                            <input type="City" class="form-control" id="City" name="City" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="AdminID" class="form-label">AdminID</label>
+                            <select type="AdminID" class="form-select" id="AdminID" name="AdminID" required>
+                                <option selected>Admin ID</option>
+                                {% for admin in admins %}
+                                    <option value= "{{admin.AdminID}}" >{{admin.AdminID}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success">Create Wearhouse</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
