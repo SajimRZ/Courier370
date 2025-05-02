@@ -118,7 +118,11 @@
                                 <td>{{ WH.City }}</td>
                                 <td>{{ WH.AdminID }}</td>
                                 <td>
-                                    
+                                    <form action="{{ url_for('admin_dashboard', action = 'delete_wh') }}" method="POST"
+                                    onsubmit="return confirm('Are you sure?')">
+                                        <input type="hidden" name="WearhouseID" value="{{WH.WearhouseID}}">
+                                        <button type="submit" class="btn btn-close"></button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -128,7 +132,7 @@
             </div>
         </div>
 
-    
+    <!-- Create new werehouse -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}

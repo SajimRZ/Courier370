@@ -52,13 +52,23 @@ def login():
     return render_template('login.html')
 
 #Admin Dashboard
-@app.route('/admin_dashboard')
+@app.route('/admin_dashboard', methods = ['GET', 'POST'])
 def admin_dashboard():
     if 'user_id' not in session or not session.get('is_admin'):
         return redirect(url_for('login'))
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
+    #delete wearhouse
+    if request.method == 'POST':
+        action = request.args.get('action') 
+        
+        if action == "delete_wh":
+            delete_wh_id = request.form["WearhouseID"]
+            cursor.execute("DELETE FROM wearhouse WHERE WearhouseID = %s", (delete_wh_id,))
+            mysql.connection.commit()
+            flash("Wearhouse deleted successfully!", "success")
+
     # Get all users
     cursor.execute('SELECT * FROM user')
     users = cursor.fetchall()
@@ -106,8 +116,8 @@ def create_admin():
     
     try:
         # Get next AdminID
-        cursor.execute('SELECT COUNT(*) as count FROM admin')
-        next_id = cursor.fetchone()['count'] + 1
+        cursor.execute('SELECT max(AdminID) as count FROM admin')
+        next_id = int(cursor.fetchone()['count']) + 1
         
         cursor.execute(
             'INSERT INTO admin (AdminID, name, email, password) VALUES (%s, %s, %s, %s)',
@@ -146,8 +156,8 @@ def create_wearhouse():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
     try:
-        cursor.execute('SELECT COUNT(*) as count FROM wearhouse')
-        next_id = cursor.fetchone()['count'] + 1
+        cursor.execute('SELECT max(WearhouseID) as count FROM wearhouse')
+        next_id = int(cursor.fetchone()['count'])+1
         
         cursor.execute(
             'INSERT INTO wearhouse (WearhouseID, Area, City, AdminID) VALUES (%s, %s, %s, %s)',
