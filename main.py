@@ -10,7 +10,7 @@ app.config['MYSQL_HOST'] = 'localhost' #server
 app.config['MYSQL_USER'] = 'root' #default
 app.config['MYSQL_PASSWORD'] = ''  #default
 app.config['MYSQL_PORT'] = 3306
-app.config['MYSQL_DB'] = '370_courier' #db_name
+app.config['MYSQL_DB'] = '370courier' #db_name
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
@@ -44,7 +44,12 @@ def login():
             session['user_id'] = user['UID']
             session['is_admin'] = False
             session['name'] = user['name']
-            return redirect(url_for('user_dashboard'))
+
+            cursor.execute('SELECT * FROM user u,courier c WHERE u.UID = c.UID AND u.email = %s AND u.password = %s', (email, password))
+            courier_check = cursor.fetchone()
+            if courier_check == None:
+                return redirect(url_for('customer_dashboard'))
+            
         
         flash('Invalid email or password', 'danger')
         
@@ -175,7 +180,31 @@ def create_wearhouse():
     
     return redirect(url_for('admin_dashboard'))
 
+## Customer Dashboard
+@app.route('/customer_dashboard', methods = ['GET', 'POST'])
+def customer_dashboard():
+    if 'user_id' not in session or not session.get('is_admin'):
+        return redirect(url_for('login'))
+    
+    #properties of the icons
+    # name, what it looks like, color, what it does
+    icons = [
+        {'name': 'Profile', 'icon_class': 'fa-user', 'color': 'primary', 'action': 'profile'},
+        {'name': 'Quick Delivery', 'icon_class': 'fa-motorcycle', 'color': 'success', 'action': 'quick'},
+        {'name': 'Shipment', 'icon_class': 'fa-truck', 'color': 'info', 'action': 'long'},
+        {'name': 'Orders', 'icon_class': 'fa-chart-bar', 'color': 'warning', 'action': 'orders'},
+        {'name': 'Payment Options', 'icon_class': 'fa-dollar', 'color': 'success', 'action': 'payment options'},
+        {'name': 'Edit', 'icon_class': 'fa-cog', 'color': 'secondary', 'action': 'edit'},
+    ]
 
+    return render_template('customer_dashboard.html', icons = icons)
+
+
+## Click action in customer dashboard
+@app.route('/handle_click/<action>')
+def handle_click(action):
+    # Add your backend logic here
+    return f"Handled action: {action}"
 
 if __name__ == "__main__":
     app.run(debug=True)
