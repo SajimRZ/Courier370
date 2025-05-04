@@ -33,7 +33,7 @@ def login():
             session['user_id'] = admin['AdminID']
             session['is_admin'] = True
             session['name'] = admin['name']
-            cursor.close()
+
             return redirect(url_for('admin_dashboard')) # go to admin dashboard page 
         
         #check if the email is user email
@@ -47,14 +47,79 @@ def login():
 
             cursor.execute('SELECT * FROM user u,courier c WHERE u.UID = c.UID AND u.email = %s AND u.password = %s', (email, password))
             courier_check = cursor.fetchone()
+            
             if courier_check == None:
                 return redirect(url_for('customer_dashboard'))
             
-        
+        cursor.close()
         flash('Invalid email or password', 'danger')
         
 
     return render_template('login.html')
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        # Get form data
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        phone = request.form['phone']
+        house = request.form['house']
+        road = request.form['road']
+        city = request.form['city']
+        license = request.form['license']
+        vtype = request.form['type'] 
+        role = request.form['role']  # 'customer' or 'courier'
+        
+        # Validate inputs
+        if not all([name, email, password, role]):
+            flash('Please fill all fields', 'error')
+            return redirect(url_for('signup'))
+        
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        
+        try:
+            # Check if email already exists
+            cursor.execute('SELECT email FROM user WHERE email = %s', (email,))
+            if cursor.fetchone():
+                flash('Email already registered', 'error')
+                return redirect(url_for('signup'))
+            
+            # Insert into user table (common fields)
+            cursor.execute('SELECT max(UID) as count FROM user')
+            next_id = int(cursor.fetchone()['count']) + 1
+            cursor.execute('''
+                INSERT INTO user (UID, email, name, password, phone)
+                VALUES (%s, %s, %s, %s)
+            ''', (next_id, email, name, password, phone))
+            
+            # Insert into role-specific table
+            if role == 'customer':
+                cursor.execute('''
+                    INSERT INTO customer (UID, houseNo, road, city)
+                    VALUES (%s, %s, %s, %s)
+                ''', (next_id, house, road, city))
+            elif role == 'courier':
+                cursor.execute('''
+                    INSERT INTO courier (UID, name, city, licenseNo, type)
+                    VALUES (%s, %s, %s)
+                ''', (next_id, name, city, license, vtype))
+            
+            mysql.connection.commit()
+            flash('Registration successful! Please login', 'success')
+            return redirect(url_for('login'))
+            
+        except Exception as e:
+            mysql.connection.rollback()
+            flash(f'Registration failed: {str(e)}', 'error')
+            return redirect(url_for('signup'))
+            
+        finally:
+            cursor.close()
+    
+    return render_template('signup.html')
 
 #Admin Dashboard
 @app.route('/admin_dashboard', methods = ['GET', 'POST'])
@@ -183,7 +248,7 @@ def create_wearhouse():
 ## Customer Dashboard
 @app.route('/customer_dashboard', methods = ['GET', 'POST'])
 def customer_dashboard():
-    if 'user_id' not in session or not session.get('is_admin'):
+    if 'user_id' not in session:
         return redirect(url_for('login'))
     
     #properties of the icons
@@ -203,8 +268,15 @@ def customer_dashboard():
 ## Click action in customer dashboard
 @app.route('/handle_click/<action>')
 def handle_click(action):
-    # Add your backend logic here
-    return f"Handled action: {action}"
+    #Profile
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    if action == 'profile':
+        cursor.execute('SELECT * FROM user u, customer c where c.UID = u.UID and c.UID = %s', (session['user_id'],))
+        user_info = cursor.fetchone()
+    cursor.close
+    return render_template('profile.html', user=user_info)        
+        
+        
 
 if __name__ == "__main__":
     app.run(debug=True)
