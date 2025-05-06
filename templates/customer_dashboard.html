@@ -8,25 +8,21 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        .icon-square {
-            width: 100px;
-            height: 100px;
-            background-color: #f8f9fa;
+        .profile-card {
+            max-width: 400px;
+            width: 100%;
+            padding: 30px;
+            background-color: linear-gradient(135deg, #6e8efb, #a777e3);
             border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 2rem;
         }
-        .icon-square:hover {
-            transform: scale(1.5);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-        }
-        .icon-label {
-            text-align: center;
-            font-weight: 500;
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
         }
     </style>
 </head>
@@ -45,19 +41,14 @@
         </div>
     </nav>
 
-    <div class="container py-5">
-        <h1 class="text-center mb-5">Customer Dashboard</h1>
-        <div class="row">
-            {% for icon in icons %}
-            <div class="col-md-4 col-sm-6 mb-4">
-                <a href="{{ url_for('handle_click', action=icon.action) }}" class="text-decoration-none">
-                    <div class="icon-square">
-                        <i class="fas {{ icon.icon_class }} fa-3x text-{{ icon.color }}"></i>
-                    </div>
-                    <p class="icon-label">{{ icon.name }}</p>
-                </a>
+    <div class="container my-4">
+        <div class="profile-card mb-4">
+            <div class="card-header">
+                <h3 class="text-center mb-4">Profile</h3>
             </div>
-            {% endfor %}
+            <card class="card-body">
+                
+            </card>
         </div>
     </div>
 
