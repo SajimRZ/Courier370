@@ -333,30 +333,19 @@ def customer_dashboard():
     cursor.close()
     return render_template('customer_dashboard.html', customer = customer)
 
-
-<<<<<<< HEAD
 ## Courier Dashboard
 @app.route('/courier_dashboard', methods = ['GET', 'POST'])
-def c_dashboard():
+def courier_dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
-    #properties of the icons
-    # name, what it looks like, color, what it does
-    icons = [
-        {'name': 'Profile', 'icon_class': 'fa-user', 'color': 'primary', 'action': 'profile'},
-        {'name': 'Quick Delivery', 'icon_class': 'fa-motorcycle', 'color': 'success', 'action': 'quick'},
-        {'name': 'Shipment', 'icon_class': 'fa-truck', 'color': 'info', 'action': 'long'},
-        {'name': 'Orders', 'icon_class': 'fa-chart-bar', 'color': 'warning', 'action': 'orders'},
-        {'name': 'Payment Options', 'icon_class': 'fa-dollar', 'color': 'success', 'action': 'payment options'},
-        {'name': 'Edit', 'icon_class': 'fa-cog', 'color': 'secondary', 'action': 'edit'},
-    ]
+    cursor.execute('SELECT * FROM user u, courier c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
+    courier = cursor.fetchone()  
+    cursor.close()
+    return render_template('courier_dashboard.html', icons = icons)
 
-    return render_template('customer_dashboard.html', icons = icons)
-
-
-=======
->>>>>>> 4d4c7227971457b660109f6be04ba7412b5e3f4c
 ## Click action in customer dashboard
 @app.route('/handle_click/<action>')
 def handle_click(action):
