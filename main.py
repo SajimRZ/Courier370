@@ -56,9 +56,7 @@ def login():
             
         cursor.close()
         flash('Invalid email or password', 'danger')
-        return redirect(url_for('login'))  # Make sure to redirect after flash
-
-    #return render_template('login.html')
+    return render_template('login.html')
 
 #signup page start - for user table data -
 @app.route('/signup', methods=['GET', 'POST'])
@@ -345,9 +343,10 @@ def courier_dashboard():
     cursor.close()
     return render_template('courier_dashboard.html', courier = courier)
 ## Courier Dashboard
-@app.route('/courier_dashboard', methods = ['GET', 'POST'])
-def courier_dashboard():
-    
+@app.route('/courier_dashboard', methods=['GET', 'POST'])
+def courier_dashboard_action(action):
+    if 'user_id' not in session:    
+        return redirect(url_for('login'))   
     return render_template('courier_dashboard.html')
 
 ## Click action in customer dashboard
