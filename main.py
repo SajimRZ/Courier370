@@ -47,7 +47,7 @@ def login():
 
             cursor.execute('SELECT * FROM user u,courier c WHERE u.UID = c.UID AND u.email = %s AND u.password = %s', (email, password))
             courier_check = cursor.fetchone()
-            
+            print(courier_check)
             if courier_check == None:
                 return redirect(url_for('customer_dashboard'))
             else:
@@ -333,6 +333,17 @@ def customer_dashboard():
     cursor.close()
     return render_template('customer_dashboard.html', customer = customer)
 
+@app.route('/courier_dashboard', methods = ['GET', 'POST'])
+def courier_dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    cursor.execute('SELECT * FROM user u, courier c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
+    courier = cursor.fetchone()  
+    cursor.close()
+    return render_template('courier_dashboard.html', courier = courier)
 
 ## Click action in customer dashboard
 @app.route('/handle_click/<action>')
