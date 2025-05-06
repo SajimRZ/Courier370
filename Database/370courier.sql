@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 28, 2025 at 03:15 AM
+-- Generation Time: May 06, 2025 at 02:04 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `370_courier`
+-- Database: `370courier`
 --
 
 -- --------------------------------------------------------
@@ -41,7 +41,7 @@ CREATE TABLE `admin` (
 INSERT INTO `admin` (`AdminID`, `name`, `email`, `password`) VALUES
 (1, 'Sajim', 'sajim@admin.com', 'sajimsajim'),
 (2, 'Jawad', 'jawad@admin.com', 'jawad123'),
-(3, 'Bob', 'bob@admin.com', '1234');
+(4, 'bob prime', 'thebob@admin.com', 'bob');
 
 -- --------------------------------------------------------
 
@@ -52,9 +52,17 @@ INSERT INTO `admin` (`AdminID`, `name`, `email`, `password`) VALUES
 CREATE TABLE `courier` (
   `UID` int(10) NOT NULL,
   `name` varchar(30) NOT NULL,
-  `licenceNo` varchar(20) NOT NULL,
-  `city` varchar(20) NOT NULL
+  `city` varchar(20) NOT NULL,
+  `licenseNo` varchar(10) NOT NULL,
+  `type` varchar(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `courier`
+--
+
+INSERT INTO `courier` (`UID`, `name`, `city`, `licenseNo`, `type`) VALUES
+(1003, 'aa', 'aa', 'aa', 'motorcyle');
 
 -- --------------------------------------------------------
 
@@ -86,7 +94,8 @@ CREATE TABLE `customer` (
 --
 
 INSERT INTO `customer` (`UID`, `houseNo`, `road`, `city`) VALUES
-(1001, '5/2', 'Monipuripara', 'Dhaka');
+(1001, '5/2', 'Monipuripara', 'Dhaka'),
+(1002, 'ss', 'ss', 'ss');
 
 -- --------------------------------------------------------
 
@@ -185,7 +194,9 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`UID`, `email`, `name`, `password`, `phone`, `AdminID`) VALUES
-(1001, 'reaz@gmail.com', 'Reaz', 'reaz123', 1842308890, 1);
+(1001, 'reaz@gmail.com', 'Reaz', 'reaz123', 1842308890, 1),
+(1002, 'sss@sss', 'sss', 'ss', 2147483647, 4),
+(1003, 'aa@aa', 'aa', 'aa', 22, 1);
 
 -- --------------------------------------------------------
 
@@ -207,7 +218,8 @@ CREATE TABLE `wearhouse` (
 INSERT INTO `wearhouse` (`WearhouseID`, `Area`, `City`, `AdminID`) VALUES
 ('1', 'Tejgao', 'Dhaka', 2),
 ('2', 'Mirpur', 'Dhaka', 2),
-('3', 'Sonapara', 'Khulna', 3);
+('5', 'Greenroad', 'Khulna', 1),
+('6', 'Badda', 'Dhaka', 1);
 
 --
 -- Indexes for dumped tables
