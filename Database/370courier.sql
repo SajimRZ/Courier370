@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 06, 2025 at 02:04 PM
+-- Generation Time: May 06, 2025 at 02:35 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -136,7 +136,7 @@ CREATE TABLE `package` (
   `D_street` varchar(20) NOT NULL,
   `D_city` varchar(20) NOT NULL,
   `type` varchar(20) NOT NULL,
-  `WearhouseID` varchar(10) NOT NULL
+  `WarehouseID` varchar(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -201,21 +201,21 @@ INSERT INTO `user` (`UID`, `email`, `name`, `password`, `phone`, `AdminID`) VALU
 -- --------------------------------------------------------
 
 --
--- Table structure for table `wearhouse`
+-- Table structure for table `warehouse`
 --
 
-CREATE TABLE `wearhouse` (
-  `WearhouseID` varchar(10) NOT NULL,
+CREATE TABLE `warehouse` (
+  `WarehouseID` varchar(10) NOT NULL,
   `Area` varchar(20) NOT NULL,
   `City` varchar(20) NOT NULL,
   `AdminID` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `wearhouse`
+-- Dumping data for table `warehouse`
 --
 
-INSERT INTO `wearhouse` (`WearhouseID`, `Area`, `City`, `AdminID`) VALUES
+INSERT INTO `warehouse` (`WarehouseID`, `Area`, `City`, `AdminID`) VALUES
 ('1', 'Tejgao', 'Dhaka', 2),
 ('2', 'Mirpur', 'Dhaka', 2),
 ('5', 'Greenroad', 'Khulna', 1),
@@ -271,7 +271,7 @@ ALTER TABLE `orders`
 --
 ALTER TABLE `package`
   ADD PRIMARY KEY (`PackageID`),
-  ADD KEY `WearhouseID` (`WearhouseID`);
+  ADD KEY `WarehouseID` (`WarehouseID`);
 
 --
 -- Indexes for table `payment`
@@ -302,10 +302,10 @@ ALTER TABLE `user`
   ADD KEY `FK_adminID` (`AdminID`);
 
 --
--- Indexes for table `wearhouse`
+-- Indexes for table `warehouse`
 --
-ALTER TABLE `wearhouse`
-  ADD PRIMARY KEY (`WearhouseID`),
+ALTER TABLE `warehouse`
+  ADD PRIMARY KEY (`WarehouseID`),
   ADD KEY `FK_adminID_w` (`AdminID`);
 
 --
@@ -350,7 +350,7 @@ ALTER TABLE `orders`
 -- Constraints for table `package`
 --
 ALTER TABLE `package`
-  ADD CONSTRAINT `package_ibfk_1` FOREIGN KEY (`WearhouseID`) REFERENCES `wearhouse` (`WearhouseID`);
+  ADD CONSTRAINT `package_ibfk_1` FOREIGN KEY (`WarehouseID`) REFERENCES `warehouse` (`WarehouseID`);
 
 --
 -- Constraints for table `pays`
@@ -364,8 +364,8 @@ ALTER TABLE `pays`
 -- Constraints for table `transfer`
 --
 ALTER TABLE `transfer`
-  ADD CONSTRAINT `transfer_ibfk_1` FOREIGN KEY (`From_WH`) REFERENCES `wearhouse` (`WearhouseID`),
-  ADD CONSTRAINT `transfer_ibfk_2` FOREIGN KEY (`To_WH`) REFERENCES `wearhouse` (`WearhouseID`);
+  ADD CONSTRAINT `transfer_ibfk_1` FOREIGN KEY (`From_WH`) REFERENCES `warehouse` (`WarehouseID`),
+  ADD CONSTRAINT `transfer_ibfk_2` FOREIGN KEY (`To_WH`) REFERENCES `warehouse` (`WarehouseID`);
 
 --
 -- Constraints for table `user`
@@ -374,9 +374,9 @@ ALTER TABLE `user`
   ADD CONSTRAINT `FK_adminID` FOREIGN KEY (`AdminID`) REFERENCES `admin` (`AdminID`);
 
 --
--- Constraints for table `wearhouse`
+-- Constraints for table `warehouse`
 --
-ALTER TABLE `wearhouse`
+ALTER TABLE `warehouse`
   ADD CONSTRAINT `FK_adminID_w` FOREIGN KEY (`AdminID`) REFERENCES `admin` (`AdminID`);
 COMMIT;
 
