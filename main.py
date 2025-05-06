@@ -24,16 +24,16 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-        #check if the email is an Admin email
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM admin WHERE email = %s AND password = %s', (email, password))
 
+        cursor.execute('SELECT * FROM admin WHERE email = %s AND password = %s', (email, password))
         admin = cursor.fetchone()
+
         if admin:
             session['user_id'] = admin['AdminID']
             session['is_admin'] = True
             session['name'] = admin['name']
-
+            cursor.close()
             return redirect(url_for('admin_dashboard')) # go to admin dashboard page 
         
         #check if the email is user email
@@ -56,9 +56,9 @@ def login():
             
         cursor.close()
         flash('Invalid email or password', 'danger')
-        
+        return redirect(url_for('login'))  # Make sure to redirect after flash
 
-    return render_template('login.html')
+    #return render_template('login.html')
 
 #signup page start - for user table data -
 @app.route('/signup', methods=['GET', 'POST'])
@@ -334,6 +334,29 @@ def customer_dashboard():
     return render_template('customer_dashboard.html', customer = customer)
 
 
+<<<<<<< HEAD
+## Courier Dashboard
+@app.route('/courier_dashboard', methods = ['GET', 'POST'])
+def c_dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    #properties of the icons
+    # name, what it looks like, color, what it does
+    icons = [
+        {'name': 'Profile', 'icon_class': 'fa-user', 'color': 'primary', 'action': 'profile'},
+        {'name': 'Quick Delivery', 'icon_class': 'fa-motorcycle', 'color': 'success', 'action': 'quick'},
+        {'name': 'Shipment', 'icon_class': 'fa-truck', 'color': 'info', 'action': 'long'},
+        {'name': 'Orders', 'icon_class': 'fa-chart-bar', 'color': 'warning', 'action': 'orders'},
+        {'name': 'Payment Options', 'icon_class': 'fa-dollar', 'color': 'success', 'action': 'payment options'},
+        {'name': 'Edit', 'icon_class': 'fa-cog', 'color': 'secondary', 'action': 'edit'},
+    ]
+
+    return render_template('customer_dashboard.html', icons = icons)
+
+
+=======
+>>>>>>> 4d4c7227971457b660109f6be04ba7412b5e3f4c
 ## Click action in customer dashboard
 @app.route('/handle_click/<action>')
 def handle_click(action):
