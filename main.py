@@ -50,6 +50,9 @@ def login():
             
             if courier_check == None:
                 return redirect(url_for('customer_dashboard'))
+            else:
+                return redirect(url_for('courier_dashboard'))
+                
             
         cursor.close()
         flash('Invalid email or password', 'danger')
@@ -323,18 +326,12 @@ def customer_dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    #properties of the icons
-    # name, what it looks like, color, what it does
-    icons = [
-        {'name': 'Profile', 'icon_class': 'fa-user', 'color': 'primary', 'action': 'profile'},
-        {'name': 'Quick Delivery', 'icon_class': 'fa-motorcycle', 'color': 'success', 'action': 'quick'},
-        {'name': 'Shipment', 'icon_class': 'fa-truck', 'color': 'info', 'action': 'long'},
-        {'name': 'Orders', 'icon_class': 'fa-chart-bar', 'color': 'warning', 'action': 'orders'},
-        {'name': 'Payment Options', 'icon_class': 'fa-dollar', 'color': 'success', 'action': 'payment options'},
-        {'name': 'Edit', 'icon_class': 'fa-cog', 'color': 'secondary', 'action': 'edit'},
-    ]
-
-    return render_template('customer_dashboard.html', icons = icons)
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    cursor.execute('SELECT * FROM user u, customer c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
+    customer = cursor.fetchone()  
+    cursor.close()
+    return render_template('customer_dashboard.html', customer = customer)
 
 
 ## Click action in customer dashboard
@@ -346,7 +343,93 @@ def handle_click(action):
         cursor.execute('SELECT * FROM user u, customer c where c.UID = u.UID and c.UID = %s', (session['user_id'],))
         user_info = cursor.fetchone()
     cursor.close
-    return render_template('profile.html', user=user_info)        
+    return render_template('profile.html', user=user_info)      
+
+
+##Update user profile
+@app.route('/update_profile', methods=['POST'])
+def update_profile():
+    if 'user_id' not in session:
+        flash('Please login first', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        cursor = mysql.connection.cursor()
+        
+        # Update user table
+        cursor.execute('''
+            UPDATE user SET 
+            name = %s, 
+            email = %s 
+            WHERE UID = %s
+        ''', (
+            request.form['name'],
+            request.form['email'],
+            session['user_id']
+        ))
+        
+        # Update customer table
+        cursor.execute('''
+            UPDATE customer SET
+            houseNo = %s,
+            road = %s,
+            city = %s
+            WHERE UID = %s
+        ''', (
+            request.form['houseNo'],
+            request.form['road'],
+            request.form['city'],
+            session['user_id']
+        ))
+        
+        mysql.connection.commit()
+        flash('Profile updated successfully!', 'success')
+        
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error updating profile: {str(e)}', 'error')
+        
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('customer_dashboard'))
+
+#add money to wallet
+@app.route('/add_money', methods=['POST'])  
+def add_money():
+    if 'user_id' not in session:
+        flash('Please login first', 'error')
+        return redirect(url_for('login'))
+    
+    amount = request.form['amount']
+    payment_method = request.form['payment_method']
+    acc_number = request.form['acc_number']
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    try:
+        cursor.execute('SELECT * FROM user WHERE UID = %s', (session['user_id'],))
+        user = cursor.fetchone()
+        
+        if user:
+            new_balance = user['wallet'] + int(amount)
+            cursor.execute('UPDATE user SET wallet = %s WHERE UID = %s', (new_balance, session['user_id']))
+            mysql.connection.commit()
+
+            cursor.execute('INSERT INTO payment (acc_number, amount, method, UID) VALUES (%s, %s, %s, %s)', (acc_number, int(amount), payment_method, session['user_id']))
+            mysql.connection.commit()
+            flash('Money added successfully!', 'success')
+        else:
+            flash('User not found', 'error')
+        
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error adding money: {str(e)}', 'error')
+        
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('customer_dashboard'))
         
         
 
