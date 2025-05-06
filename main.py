@@ -336,15 +336,8 @@ def customer_dashboard():
 ## Courier Dashboard
 @app.route('/courier_dashboard', methods = ['GET', 'POST'])
 def courier_dashboard():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
-    cursor.execute('SELECT * FROM user u, courier c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
-    courier = cursor.fetchone()  
-    cursor.close()
-    return render_template('courier_dashboard.html', icons = icons)
+    return render_template('courier_dashboard.html')
 
 ## Click action in customer dashboard
 @app.route('/handle_click/<action>')
