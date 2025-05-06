@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .icon-square {
+            width: 100px;
+            height: 100px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .icon-square:hover {
+            transform: scale(1.5);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        .icon-label {
+            text-align: center;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">Courier Management</a>
+            <div class="d-flex">
+                <span class="navbar-text me-3 text-white">
+                    Welcome, {{ session.name }}
+                </span>
+                <a href="{{ url_for('login') }}" class="btn btn-danger">Logout</a>  
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <h1 class="text-center mb-5">Courier Dashboard</h1>
+        <div class="row">
+            {% for icon in icons %}
+            <div class="col-md-4 col-sm-6 mb-4">
+                <a href="{{ url_for('handle_click', action=icon.action) }}" class="text-decoration-none">
+                    <div class="icon-square">
+                        <i class="fas {{ icon.icon_class }} fa-3x text-{{ icon.color }}"></i>
+                    </div>
+                    <p class="icon-label">{{ icon.name }}</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

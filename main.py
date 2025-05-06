@@ -24,16 +24,16 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-        #check if the email is an Admin email
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM admin WHERE email = %s AND password = %s', (email, password))
 
+        cursor.execute('SELECT * FROM admin WHERE email = %s AND password = %s', (email, password))
         admin = cursor.fetchone()
+
         if admin:
             session['user_id'] = admin['AdminID']
             session['is_admin'] = True
             session['name'] = admin['name']
-
+            cursor.close()
             return redirect(url_for('admin_dashboard')) # go to admin dashboard page 
         
         #check if the email is user email
@@ -56,9 +56,9 @@ def login():
             
         cursor.close()
         flash('Invalid email or password', 'danger')
-        
+        return redirect(url_for('login'))  # Make sure to redirect after flash
 
-    return render_template('login.html')
+    #return render_template('login.html')
 
 #signup page start - for user table data -
 @app.route('/signup', methods=['GET', 'POST'])
@@ -344,6 +344,11 @@ def courier_dashboard():
     courier = cursor.fetchone()  
     cursor.close()
     return render_template('courier_dashboard.html', courier = courier)
+## Courier Dashboard
+@app.route('/courier_dashboard', methods = ['GET', 'POST'])
+def courier_dashboard():
+    
+    return render_template('courier_dashboard.html')
 
 ## Click action in customer dashboard
 @app.route('/handle_click/<action>')
