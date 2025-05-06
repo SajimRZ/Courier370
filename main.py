@@ -57,7 +57,7 @@ def login():
 
     return render_template('login.html')
 
-
+#signup page start - for user table data -
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -66,51 +66,70 @@ def signup():
         email = request.form['email']
         password = request.form['password']
         phone = request.form['phone']
-        house = request.form['house']
+        role = request.form['role']
+        
+        session['signup_data'] = {
+                'name': name,
+                'email': email,
+                'password': password,
+                'phone': phone,
+                'role': role
+            }   
+        
+        # Redirect based on role
+        if role == 'customer':
+            return redirect(url_for('customer_signup'))
+        elif role == 'courier':
+            return redirect(url_for('courier_signup'))
+    return render_template('signup.html')
+
+#signup table next page for customer
+@app.route('/signup/customer_signup', methods=['GET', 'POST'])
+def customer_signup():
+    if request.method == 'POST':
+        #get cutomer exclusive data
+        houseNo = request.form['houseNo']
         road = request.form['road']
         city = request.form['city']
-        license = request.form['license']
-        vtype = request.form['type'] 
-        role = request.form['role']  # 'customer' or 'courier'
-        
-        # Validate inputs
-        if not all([name, email, password, role]):
+        signup_data = session.get('signup_data', {})
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        #check if all data is filled up
+        if not all([signup_data['email'], signup_data['name'], signup_data['password'], signup_data['phone'], houseNo, road, city]):
             flash('Please fill all fields', 'error')
             return redirect(url_for('signup'))
-        
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        
+
         try:
-            # Check if email already exists
-            cursor.execute('SELECT email FROM user WHERE email = %s', (email,))
+            #check if email already exists or not
+            cursor.execute('SELECT email FROM user WHERE email = %s', (signup_data['email'],))
             if cursor.fetchone():
                 flash('Email already registered', 'error')
                 return redirect(url_for('signup'))
             
-            # Insert into user table (common fields)
+            # Insert into user table
             cursor.execute('SELECT max(UID) as count FROM user')
             next_id = int(cursor.fetchone()['count']) + 1
-            cursor.execute('''
-                INSERT INTO user (UID, email, name, password, phone)
-                VALUES (%s, %s, %s, %s)
-            ''', (next_id, email, name, password, phone))
-            
-            # Insert into role-specific table
-            if role == 'customer':
-                cursor.execute('''
-                    INSERT INTO customer (UID, houseNo, road, city)
-                    VALUES (%s, %s, %s, %s)
-                ''', (next_id, house, road, city))
-            elif role == 'courier':
-                cursor.execute('''
-                    INSERT INTO courier (UID, name, city, licenseNo, type)
-                    VALUES (%s, %s, %s)
-                ''', (next_id, name, city, license, vtype))
+
+            cursor.execute('SELECT AdminID from admin')
+            admin_num = cursor.fetchall()
+            cursor.execute('SELECT count(*) as count from admin')
+            admin_count = cursor.fetchone()['count']
+
+            id_num = int((next_id-1)%admin_count)+1
+            admin_id = admin_num[id_num-1]['AdminID']
+            admin_id = int(admin_id)
+
+
+
+            cursor.execute('INSERT INTO user (UID, email, name, password, phone, AdminID) VALUES (%s, %s, %s, %s, %s, %s)', (next_id, signup_data['email'], signup_data['name'], signup_data['password'], signup_data['phone'], admin_id))
+            #insert into customer table
+            cursor.execute('INSERT INTO customer (UID, houseNo, road, city) VALUES (%s, %s, %s, %s)', (next_id, houseNo, city, road))
             
             mysql.connection.commit()
-            flash('Registration successful! Please login', 'success')
+            #if all good go back to login page
+            flash('Customer registration successful!', 'success')
             return redirect(url_for('login'))
-            
+        
         except Exception as e:
             mysql.connection.rollback()
             flash(f'Registration failed: {str(e)}', 'error')
@@ -119,7 +138,60 @@ def signup():
         finally:
             cursor.close()
     
-    return render_template('signup.html')
+    return render_template('customer_signup.html')
+
+#signup table next page for courier
+@app.route('/courier_signup', methods=['GET', 'POST'])
+def courier_signup():
+    if request.method == 'POST':
+        #get courier exclusive data
+        licenseNo = request.form['licenseNo']
+        type = request.form['type']
+        city = request.form['city']
+        signup_data = session.get('signup_data', {})
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        
+        #check if all data is filled up
+        if not all([signup_data['email'], signup_data['name'], signup_data['password'], signup_data['phone'], licenseNo, type, city]):
+            flash('Please fill all fields', 'error')
+            return redirect(url_for('signup'))
+
+        try:
+            #check if email already exists or not
+            cursor.execute('SELECT email FROM user WHERE email = %s', (signup_data['email'],))
+            if cursor.fetchone():
+                flash('Email already registered', 'error')
+                return redirect(url_for('signup'))
+            
+            # Insert into user table
+            cursor.execute('SELECT max(UID) as count FROM user')
+            next_id = int(cursor.fetchone()['count']) + 1
+            cursor.execute('SELECT AdminID from admin')
+            admin_num = cursor.fetchall()
+            cursor.execute('SELECT count(*) as count from admin')
+            admin_count = cursor.fetchone()['count']
+
+            id_num = int((next_id-1)%admin_count)+1
+            admin_id = admin_num[id_num-1]['AdminID']
+            admin_id = int(admin_id)
+
+
+            cursor.execute('INSERT INTO user (UID, email, name, password, phone, AdminID) VALUES (%s, %s, %s, %s, %s, %s)', (next_id, signup_data['email'], signup_data['name'], signup_data['password'], signup_data['phone'], admin_id))
+            #insert into courier table
+            cursor.execute('INSERT INTO courier (UID, name, city, licenseNo, type) VALUES (%s, %s, %s, %s, %s)', (next_id, signup_data['name'], city, licenseNo, type))
+            
+            mysql.connection.commit()
+            #if all good go back to login page
+            flash('Customer registration successful!', 'success')
+            return redirect(url_for('login'))
+        
+        
+            
+        finally:
+            cursor.close()
+    
+    return render_template('courier_signup.html')
 
 #Admin Dashboard
 @app.route('/admin_dashboard', methods = ['GET', 'POST'])

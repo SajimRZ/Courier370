@@ -8,126 +8,65 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: linear-gradient(to bottom right, #cbd4df, #5dc962);;
+            height: 100vh;
+            display: flex;
+            align-items: center;
         }
         .signup-container {
-            max-width: 500px;
-            margin: 50px auto;
+            max-width: 400px;
+            width: 100%;
             padding: 30px;
-            background: white;
+            background-color: white;
             border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        }
-        .role-selector {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        .role-option {
-            width: 45%;
-            padding: 15px;
-            text-align: center;
-            border: 2px solid #dee2e6;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .role-option:hover {
-            border-color: #adb5bd;
-        }
-        .role-option.active {
-            border-color: #0d6efd;
-            background-color: #f0f7ff;
-        }
-        .role-option i {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            color: #6c757d;
-        }
-        .role-option.active i {
-            color: #0d6efd;
-        }
-        .hidden {
-            display: none;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container d-flex justify-content-center">
         <div class="signup-container">
             <h2 class="text-center mb-4">Create Your Account</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
             
-            <form action="/signup" method="POST">
-                <!-- Hidden role input -->
-                <input type="hidden" name="role" id="selectedRole" value="customer">
+            <form action="{{ url_for('signup') }}" method="POST">
                 
-                <!-- Role Selector -->
-                <div class="role-selector">
-                    <div class="role-option active" onclick="selectRole('customer')">
-                        <i class="fas fa-user"></i>
-                        <h5>Customer</h5>
-                        <p>I want to order items</p>
-                    </div>
-                    <div class="role-option ms-3" onclick="selectRole('courier')">
-                        <i class="fas fa-bicycle"></i>
-                        <h5>Courier</h5>
-                        <p>I want to deliver items</p>
-                    </div>
-                </div>
-                
-                <!-- Common Fields -->
-                <div class="mb-3">
+                <div class="col-mb-4">
                     <label for="name" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+                    <input type="name" class="form-control" id="name" name="name" required>
                 </div>
-                
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email address</label>
+                <div class="col-mb-4">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="phone" class="form-control" id="phone" name="phone" required>
+                </div>
+                <div class="col-mb-4">
+                    <label for="email" class="form-label">Email</label>
                     <input type="email" class="form-control" id="email" name="email" required>
                 </div>
-                
-                <div class="mb-3">
+                <div class="col-mb-4">
                     <label for="password" class="form-label">Password</label>
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
-                
-                <!-- Customer Specific Fields (shown by default) -->
-                <div id="customerFields">
-                    <div class="mb-3">
-                        <label for="house" class="form-label">House Number</label>
-                        <input class="form-control" id="house" name="house" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="road" class="form-label">Road Name</label>
-                        <input class="form-control" id="road" name="road" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="city" class="form-label">City</label>
-                        <input class="form-control" id="city" name="city" required>
-                    </div>
+                <div class="col-mb-4 mb-4">
+                    <label for="role" class="form-label">Role</label>
+                    <select type="role" class="form-control" id="role" name="role" required>
+                        <option value= "customer" >Customer</option>
+                        <option value= "courier" >Courier</option>
+                    </select>
                 </div>
                 
-                <!-- Courier Specific Fields (hidden by default) -->
-                <div id="courierFields" class="hidden">
-                    <div class="mb-3">
-                        <label for="vehicle" class="form-label">Vehicle Type</label>
-                        <select class="form-select" id="vtype" name="vehicle">
-                            <option value="bicycle">Truck</option>
-                            <option value="motorcycle">Motorcycle</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="license" class="form-label">License Number</label>
-                        <input type="text" class="form-control" id="license" name="license" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="license" class="form-label">City</label>
-                        <input type="text" class="form-control" id="city" name="city" required>
-                    </div>
-                </div>
-                
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">Sign Up</button>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary w-100">Next</button>
                 </div>
                 
                 <div class="text-center mt-3">
@@ -138,26 +77,5 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function selectRole(role) {
-            // Update hidden input
-            document.getElementById('selectedRole').value = role;
-            
-            // Update UI
-            document.querySelectorAll('.role-option').forEach(opt => {
-                opt.classList.remove('active');
-            });
-            event.currentTarget.classList.add('active');
-            
-            // Show/hide role-specific fields
-            if (role === 'customer') {
-                document.getElementById('customerFields').classList.remove('hidden');
-                document.getElementById('courierFields').classList.add('hidden');
-            } else {
-                document.getElementById('customerFields').classList.add('hidden');
-                document.getElementById('courierFields').classList.remove('hidden');
-            }
-        }
-    </script>
 </body>
 </html>
