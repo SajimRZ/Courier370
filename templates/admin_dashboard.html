@@ -93,17 +93,17 @@
         <div>
 
         </div>
-        <!-- WearHouse List-->
+        <!-- WareHouse List-->
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Wearhouse Sites</h5>
+                <h5 class="mb-0">Warehouse Sites</h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>WearhouseID</th>
+                                <th>WarehouseID</th>
                                 <th>Area</th>
                                 <th>City</th>
                                 <th>Admin ID</th>
@@ -113,14 +113,14 @@
                         <tbody>
                             {% for WH in wh %}
                             <tr>
-                                <td>{{ WH.WearhouseID }}</td>
+                                <td>{{ WH.WarehouseID }}</td>
                                 <td>{{ WH.Area }}</td>
                                 <td>{{ WH.City }}</td>
                                 <td>{{ WH.AdminID }}</td>
                                 <td>
                                     <form action="{{ url_for('admin_dashboard', action = 'delete_wh') }}" method="POST"
                                     onsubmit="return confirm('Are you sure?')">
-                                        <input type="hidden" name="WearhouseID" value="{{WH.WearhouseID}}">
+                                        <input type="hidden" name="WarehouseID" value="{{WH.WarehouseID}}">
                                         <button type="submit" class="btn btn-close"></button>
                                     </form>
                                 </td>
@@ -132,7 +132,7 @@
             </div>
         </div>
 
-    <!-- Create new werehouse -->
+    <!-- Create new warehouse -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -148,7 +148,7 @@
                 <h5 class="mb-0">Create New Site</h5>
             </div>
             <div class="card-body">
-                <form action="{{ url_for('create_wearhouse') }}" method="post">
+                <form action="{{ url_for('create_warehouse') }}" method="post">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label for="Area" class="form-label">Area</label>
@@ -168,7 +168,7 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <button type="submit" class="btn btn-success">Create Wearhouse</button>
+                            <button type="submit" class="btn btn-success">Create Warehouse</button>
                         </div>
                     </div>
                 </form>
