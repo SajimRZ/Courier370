@@ -201,15 +201,15 @@ def admin_dashboard():
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
-    #delete wearhouse
+    #delete warehouse
     if request.method == 'POST':
         action = request.args.get('action') 
         
         if action == "delete_wh":
-            delete_wh_id = request.form["WearhouseID"]
-            cursor.execute("DELETE FROM wearhouse WHERE WearhouseID = %s", (delete_wh_id,))
+            delete_wh_id = request.form["WarehouseID"]
+            cursor.execute("DELETE FROM warehouse WHERE WarehouseID = %s", (delete_wh_id,))
             mysql.connection.commit()
-            flash("Wearhouse deleted successfully!", "success")
+            flash("Warehouse deleted successfully!", "success")
 
     # Get all users
     cursor.execute('SELECT * FROM user')
@@ -219,7 +219,7 @@ def admin_dashboard():
     cursor.execute('SELECT * FROM admin')
     admins = cursor.fetchall()
 
-    cursor.execute('SELECT * FROM wearhouse')
+    cursor.execute('SELECT * FROM warehouse')
     wh = cursor.fetchall()
     
     cursor.close()
@@ -288,9 +288,9 @@ def delete_admin(AdminID):
         flash("Admin deleted successfully!", "success")
         return redirect(url_for('add_admin'))
 
-##Create Wearhouse
+##Create Warehouse
 @app.route('/admin_dashboard/createwh', methods=['POST'])
-def create_wearhouse():  
+def create_warehouse():  
     area = request.form['Area']
     city = request.form['City']
     a_id = request.form['AdminID']
@@ -298,11 +298,11 @@ def create_wearhouse():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
     try:
-        cursor.execute('SELECT max(WearhouseID) as count FROM wearhouse')
+        cursor.execute('SELECT max(WarehouseID) as count FROM warehouse')
         next_id = int(cursor.fetchone()['count'])+1
         
         cursor.execute(
-            'INSERT INTO wearhouse (WearhouseID, Area, City, AdminID) VALUES (%s, %s, %s, %s)',
+            'INSERT INTO warehouse (WarehouseID, Area, City, AdminID) VALUES (%s, %s, %s, %s)',
             (next_id, area, city, a_id)
         )
         
