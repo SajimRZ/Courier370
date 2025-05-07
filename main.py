@@ -461,19 +461,19 @@ def accept_package(package_id):
     
     cursor = mysql.connection.cursor()
 
-    try:
-        cursor.execute("SELECT * FROM package WHERE packageID = %s", (package_id)) #forgot how to sql
-        package = cursor.fetchone()
+    # try:
+    #     cursor.execute("SELECT * FROM package WHERE packageID = %s", (package_id)) #forgot how to sql
+    #     package = cursor.fetchone()
 
-        if not package:
-            return jsonify({'success': False, 'message': 'Package not found'})
+    #     if not package:
+    #         return jsonify({'success': False, 'message': 'Package not found'})
         
-        if package.status != 'Available':
-            return jsonify({'success': False, 'message': 'Package already taken'})
+    #     if package.status != 'Available':
+    #         return jsonify({'success': False, 'message': 'Package already taken'})
         
-    package.status = 'In Transit'
-    package.courier_id = session['courier_id']
-    db.session.commit()
+    # package.status = 'In Transit'
+    # package.courier_id = session['courier_id']
+    # db.session.commit()
     
     return jsonify({'success': True})
 
