@@ -423,7 +423,7 @@ def update_profile_courier():
         # Update user table
         cursor.execute('''
             UPDATE user SET 
-            name = %s, 
+            name = %s
             WHERE UID = %s
         ''', (
             request.form['name'],
@@ -443,9 +443,7 @@ def update_profile_courier():
         mysql.connection.commit()
         flash('Profile updated successfully!', 'success')
         
-    except Exception as e:
-        mysql.connection.rollback()
-        flash(f'Error updating profile: {str(e)}', 'error')
+    
         
     finally:
         cursor.close()
