@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 import re
@@ -342,6 +342,7 @@ def courier_dashboard():
     courier = cursor.fetchone()  
     cursor.close()
     return render_template('courier_dashboard.html', courier = courier)
+
 ## Courier Dashboard
 @app.route('/courier_dashboard', methods=['GET', 'POST'])
 def courier_dashboard_action(action):
@@ -361,8 +362,8 @@ def handle_click(action):
     return render_template('profile.html', user=user_info)      
 
 
-##Update user profile
-@app.route('/update_profile', methods=['POST'])
+##Update customer profile
+@app.route('/update_profile_customer', methods=['POST'])
 def update_profile():
     if 'user_id' not in session:
         flash('Please login first', 'error')
@@ -408,6 +409,73 @@ def update_profile():
         cursor.close()
     
     return redirect(url_for('customer_dashboard'))
+
+##Update courier profile
+@app.route('/update_profile_courier', methods=['POST'])
+def update_profile_courier():
+    if 'user_id' not in session:
+        flash('Please login first', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        cursor = mysql.connection.cursor()
+        
+        # Update user table
+        cursor.execute('''
+            UPDATE user SET 
+            name = %s, 
+            WHERE UID = %s
+        ''', (
+            request.form['name'],
+            session['user_id']
+        ))
+        
+        # Update courier table
+        cursor.execute('''
+            UPDATE courier SET
+            city = %s
+            WHERE UID = %s
+        ''', (
+            request.form['city'],
+            session['user_id']
+        ))
+        
+        mysql.connection.commit()
+        flash('Profile updated successfully!', 'success')
+        
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error updating profile: {str(e)}', 'error')
+        
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('courier_dashboard'))
+
+#accept package
+@app.route('/accept_package/<package_id>', methods=['POST'])
+def accept_package(package_id):
+    if 'courier_id' not in session:
+        flash('Please login first', 'error')
+        return redirect(url_for('login'))
+    
+    cursor = mysql.connection.cursor()
+
+    try:
+        cursor.execute("SELECT * FROM package WHERE packageID = %s", (package_id)) #forgot how to sql
+        package = cursor.fetchone()
+
+        if not package:
+            return jsonify({'success': False, 'message': 'Package not found'})
+        
+        if package.status != 'Available':
+            return jsonify({'success': False, 'message': 'Package already taken'})
+        
+    package.status = 'In Transit'
+    package.courier_id = session['courier_id']
+    db.session.commit()
+    
+    return jsonify({'success': True})
 
 #add money to wallet
 @app.route('/add_money', methods=['POST'])  
