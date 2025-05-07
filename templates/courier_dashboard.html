@@ -93,8 +93,8 @@
                         <thead class="table-primary">
                             <tr>
                                 <th>Package ID</th>
-                                <th>Sender Location</th>
-                                <th>Receiver Location</th>
+                                <th>Pickup</th>
+                                <th>Destination</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -102,8 +102,8 @@
                             {% for package in available_packages %}
                             <tr data-pkg-id="{{ package.id }}">
                                 <td>{{ package.id }}</td>
-                                <td>{{ package.sender_location }}</td>
-                                <td>{{ package.receiver_location }}</td>
+                                <td>{{ package.s_city }}</td>
+                                <td>{{ package.d_city }}</td>
                                 <td>
                                     <button class="btn btn-accept btn-sm accept-btn" onclick="acceptPackage('{{ package.id }}')">
                                         <i class="fas fa-check"></i> Accept
