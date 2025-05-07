@@ -104,11 +104,6 @@
                                 <td>{{ package.PackageID }}</td>
                                 <td>{{ package.S_city }}</td>
                                 <td>{{ package.D_city }}</td>
-                            {% for package in available_packages %}
-                            <tr data-pkg-id="{{ package.id }}">
-                                <td>{{ package.id }}</td>
-                                <td>{{ package.s_city }}</td>
-                                <td>{{ package.d_city }}</td>
                                 <td>
                                     <button class="btn btn-accept btn-sm accept-btn" action = "/my_package">
                                         <i class="fas fa-check"></i> Accept
