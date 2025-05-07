@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 06, 2025 at 02:35 PM
+-- Generation Time: May 07, 2025 at 05:09 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,7 +62,7 @@ CREATE TABLE `courier` (
 --
 
 INSERT INTO `courier` (`UID`, `name`, `city`, `licenseNo`, `type`) VALUES
-(1003, 'aa', 'aa', 'aa', 'motorcyle');
+(1003, 'aa', 'bbbb', 'aa', 'motorcyle');
 
 -- --------------------------------------------------------
 
@@ -94,7 +94,7 @@ CREATE TABLE `customer` (
 --
 
 INSERT INTO `customer` (`UID`, `houseNo`, `road`, `city`) VALUES
-(1001, '5/2', 'Monipuripara', 'Dhaka'),
+(1001, '5/2', 'Mirpur', 'Dhaka'),
 (1002, 'ss', 'ss', 'ss');
 
 -- --------------------------------------------------------
@@ -146,10 +146,20 @@ CREATE TABLE `package` (
 --
 
 CREATE TABLE `payment` (
-  `PaymentID` varchar(10) NOT NULL,
-  `ammount` int(20) NOT NULL,
-  `method` varchar(20) NOT NULL
+  `acc_number` varchar(10) NOT NULL,
+  `amount` int(20) NOT NULL,
+  `method` varchar(20) NOT NULL,
+  `UID` int(10) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payment`
+--
+
+INSERT INTO `payment` (`acc_number`, `amount`, `method`, `UID`) VALUES
+('112', 1, 'debit_card', 1001),
+('222-333', 15, 'debit_card', 1001),
+('222-333', 10, 'net_banking', 1001);
 
 -- --------------------------------------------------------
 
@@ -186,17 +196,18 @@ CREATE TABLE `user` (
   `name` varchar(30) NOT NULL,
   `password` varchar(10) NOT NULL,
   `phone` int(11) NOT NULL,
-  `AdminID` int(10) DEFAULT NULL
+  `AdminID` int(10) DEFAULT NULL,
+  `wallet` int(16) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `user`
 --
 
-INSERT INTO `user` (`UID`, `email`, `name`, `password`, `phone`, `AdminID`) VALUES
-(1001, 'reaz@gmail.com', 'Reaz', 'reaz123', 1842308890, 1),
-(1002, 'sss@sss', 'sss', 'ss', 2147483647, 4),
-(1003, 'aa@aa', 'aa', 'aa', 22, 1);
+INSERT INTO `user` (`UID`, `email`, `name`, `password`, `phone`, `AdminID`, `wallet`) VALUES
+(1001, 'reaz@gmail.com', 'Reaz', 'reaz123', 1842308890, 1, 310),
+(1002, 'sss@sss', 'sss', 'ss', 2147483647, 4, 0),
+(1003, 'aa@aa', 'aaaaa', 'aa', 22, 1, 0);
 
 -- --------------------------------------------------------
 
@@ -272,20 +283,6 @@ ALTER TABLE `orders`
 ALTER TABLE `package`
   ADD PRIMARY KEY (`PackageID`),
   ADD KEY `WarehouseID` (`WarehouseID`);
-
---
--- Indexes for table `payment`
---
-ALTER TABLE `payment`
-  ADD PRIMARY KEY (`PaymentID`);
-
---
--- Indexes for table `pays`
---
-ALTER TABLE `pays`
-  ADD KEY `CustomerID` (`CustomerID`),
-  ADD KEY `OrderID` (`OrderID`),
-  ADD KEY `PaymentID` (`PaymentID`);
 
 --
 -- Indexes for table `transfer`
