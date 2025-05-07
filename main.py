@@ -348,9 +348,10 @@ def courier_dashboard():
 
 ## Courier Dashboard
 @app.route('/courier_dashboard', methods=['GET', 'POST'])
-def courier_dashboard_action(action):
+def courier_dashboard_action():
     if 'user_id' not in session:    
         return redirect(url_for('login'))   
+    
     return render_template('courier_dashboard.html')
 
 ## Click action in customer dashboard
@@ -476,7 +477,13 @@ def accept_package(package_id):
     # package.courier_id = session['courier_id']
     # db.session.commit()
     
-    return jsonify({'success': True})
+    #return jsonify({'success': True})
+
+#recieve package for transfer
+@app.route('/my_package', methods=['GET', 'POST'])
+def my_package():
+    print("kisu akta/it works")
+    return redirect(url_for('courier_dashboard'))
 
 #add money to wallet
 @app.route('/add_money', methods=['POST'])  
