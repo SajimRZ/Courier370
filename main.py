@@ -362,8 +362,8 @@ def handle_click(action):
     return render_template('profile.html', user=user_info)      
 
 
-##Update customer profile
-@app.route('/update_profile_customer', methods=['POST'])
+##Update user profile
+@app.route('/update_profile', methods=['POST'])
 def update_profile():
     if 'user_id' not in session:
         flash('Please login first', 'error')
