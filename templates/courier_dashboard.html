@@ -59,7 +59,7 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3" style="margin-left: 30px;">
-                            <h5>Name</h5>
+                            <h5>Saihan</h5>
                             <p>{{ courier.name }}</p>
                             <h5>Email</h5>
                             <p>{{ courier.email }}</p>
@@ -105,7 +105,7 @@
                                 <td>{{ package.s_city }}</td>
                                 <td>{{ package.d_city }}</td>
                                 <td>
-                                    <button class="btn btn-accept btn-sm accept-btn" onclick="acceptPackage('{{ package.id }}')">
+                                    <button class="btn btn-accept btn-sm accept-btn" action = "/my_package">
                                         <i class="fas fa-check"></i> Accept
                                     </button>
                                 </td>
