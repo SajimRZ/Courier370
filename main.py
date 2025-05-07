@@ -473,7 +473,13 @@ def accept_package(package_id):
     # package.courier_id = session['courier_id']
     # db.session.commit()
     
-    return jsonify({'success': True})
+    #return jsonify({'success': True})
+
+#recieve package for transfer
+@app.route('/my_package', methods=['GET', 'POST'])
+def my_package():
+    print("kisu akta/it works")
+    return redirect(url_for('courier_dashboard'))
 
 #add money to wallet
 @app.route('/add_money', methods=['POST'])  
