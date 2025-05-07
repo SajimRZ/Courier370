@@ -39,20 +39,147 @@
             </div>
         </div>
     </nav>
-
-    <div class="container py-5">
-        <h1 class="text-center mb-5">Courier Dashboard</h1>
-        <div class="row">
-            {% for icon in icons %}
-            <div class="col-md-4 col-sm-6 mb-4">
-                <a href="{{ url_for('handle_click', action=icon.action) }}" class="text-decoration-none">
-                    <div class="icon-square">
-                        <i class="fas {{ icon.icon_class }} fa-3x text-{{ icon.color }}"></i>
+    <div class="container my-4">
+        <div class="row"> 
+            <div class="col-md-6 mb-4">
+                <div class="profile-card mb-4">
+                    <div class="card-header">
+                        <h3 class="text-center mb-4">Profile</h3>
                     </div>
-                    <p class="icon-label">{{ icon.name }}</p>
-                </a>
+                    <card class="card-body">
+                        <div class="mb-3" style="margin-left: 30px;">
+                            <h5>Name</h5>
+                            <p class="text-muted">{{ customer.name }}</p>
+                            <h5>Email</h5>
+                            <p class="text-muted">{{ customer.email }}</p>
+                            <h5>Address</h5>
+                            <p class="text-muted">{{ customer.houseNo }}</p>
+                            <p class="text-muted">{{ customer.road }}</p>
+                            <p class="text-muted">{{ customer.city }}</p>
+                        </div>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal" style="margin-left: 30px;">
+                            Edit Profile
+                        </button>
+                    </card>
+                </div>
             </div>
-            {% endfor %}
+            <div class="col-md-6">
+                <div class="row">
+                    <div class="col-md-12 mb-4">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        <!-- First blank card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="wallet>">Wallet</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center">
+                                    <h2 class="stat-value">Tk.{{ customer.wallet }}</h2>
+                                    <p class="stat-label">Current Balance</p>           
+                                </div>
+                                <div class="text-center mt-4">
+                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMoneyModal">
+                                        Add Money
+                                    </button>
+                                </div>
+                        </div>
+
+                    </div>
+                    <div class="col-md-12">
+                        <!-- Second blank card -->
+                        <div class="card">
+                            <div class="card-body">
+                                <!-- Content will be added here later -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+      
+    </div>
+
+
+    <!-- Edit Profile Modal -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Profile</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="/update_profile">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" name="name" value="{{ customer.name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" name="email" value="{{ customer.email }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">House Number</label>
+                            <input type="text" class="form-control" name="houseNo" value="{{ customer.houseNo }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Road</label>
+                            <input type="text" class="form-control" name="road" value="{{ customer.road }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" name="city" value="{{ customer.city }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Money Modal -->
+    <div class="modal fade" id="addMoneyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Money</h5>
+                </div>
+                <form method="POST" action="/add_money">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <input type="number" class="form-control" name="amount" required>       
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" name="payment_method" required>
+                                <option value="credit_card">Credit Card</option>
+                                <option value="debit_card">Debit Card</option>
+                                <option value="net_banking">Net Banking</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Account Number</label>
+                            <input type="text" class="form-control" name="acc_number" required>       
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Add Money</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
