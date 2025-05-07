@@ -99,11 +99,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for package in available_packages %}
-                            <tr data-pkg-id="{{ package.id }}">
-                                <td>{{ package.id }}</td>
-                                <td>{{ package.sender_location }}</td>
-                                <td>{{ package.receiver_location }}</td>
+                            {% for package in packages %}
+                            <tr>
+                                <td>{{ package.PackageID }}</td>
+                                <td>{{ package.S_city }}</td>
+                                <td>{{ package.D_city }}</td>
                                 <td>
                                     <button class="btn btn-accept btn-sm accept-btn" onclick="acceptPackage('{{ package.id }}')">
                                         <i class="fas fa-check"></i> Accept
@@ -127,7 +127,7 @@
                         </thead>
                         <tbody>
                             {% for package in my_packages %}
-                            <tr data-pkg-id="{{ package.id }}">
+                            <tr>
                                 <td>{{ package.id }}</td>
                                 <td>{{ package.status }}</td>
                                 <td>

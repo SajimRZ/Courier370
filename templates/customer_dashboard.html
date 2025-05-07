@@ -23,6 +23,12 @@
             margin-bottom: 20px;
             border: none;
         }
+        .grow-on-hover {
+            transition: transform 0.2s ease-in-out;
+        }
+        .grow-on-hover:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 
@@ -95,12 +101,7 @@
 
                     </div>
                     <div class="col-md-12">
-                        <!-- Second blank card -->
-                        <div class="card">
-                            <div class="card-body">
-                                <!-- Content will be added here later -->
-                            </div>
-                        </div>
+                        <button class="btn btn-primary w-100 grow-on-hover" style="height: 50px;" data-bs-toggle="modal" data-bs-target="#editProfileModal">Create Package</button>
                     </div>
                 </div>
             </div>

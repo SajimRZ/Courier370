@@ -339,9 +339,12 @@ def courier_dashboard():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
     cursor.execute('SELECT * FROM user u, courier c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
-    courier = cursor.fetchone()  
+    courier = cursor.fetchone()
+    cursor.execute('SELECT * FROM package')
+    packages = cursor.fetchall()
+
     cursor.close()
-    return render_template('courier_dashboard.html', courier = courier)
+    return render_template('courier_dashboard.html', courier = courier, packages = packages)
 
 ## Courier Dashboard
 @app.route('/courier_dashboard', methods=['GET', 'POST'])
