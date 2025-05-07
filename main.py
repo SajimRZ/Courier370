@@ -452,7 +452,7 @@ def update_profile_courier():
     
     return redirect(url_for('courier_dashboard'))
 
-#accept package
+#accept package (incomplete)
 @app.route('/accept_package/<package_id>', methods=['POST'])
 def accept_package(package_id):
     if 'courier_id' not in session:
