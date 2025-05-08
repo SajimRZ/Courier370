@@ -340,9 +340,8 @@ def courier_dashboard():
     
     cursor.execute('SELECT * FROM user u, courier c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
     courier = cursor.fetchone()
-    cursor.execute('SELECT * FROM package')
-    packages = cursor.fetchall()
-
+    cursor.execute("SELECT PackageID, CONCAT_WS(', ', S_houseNo, S_street, S_city) as pickup, CONCAT_WS(', ', D_HouseNo, D_street, D_city) as destination FROM package") #type filtering todo
+    packages = cursor.fetchall()  
     cursor.close()
     return render_template('courier_dashboard.html', courier = courier, packages = packages)
 
@@ -353,6 +352,18 @@ def courier_dashboard_action():
         return redirect(url_for('login'))   
     
     return render_template('courier_dashboard.html')
+
+## Click action in customer dashboard
+@app.route('/handle_click/<action>')
+def handle_click(action):
+    #Profile
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    if action == 'profile':
+        cursor.execute('SELECT * FROM user u, customer c where c.UID = u.UID and c.UID = %s', (session['user_id'],))
+        user_info = cursor.fetchone()
+    cursor.close
+    return render_template('profile.html', user=user_info)      
+
 
 ##Update user profile
 @app.route('/update_profile', methods=['POST'])
@@ -368,9 +379,11 @@ def update_profile():
         cursor.execute('''
             UPDATE user SET 
             name = %s, 
+            email = %s 
             WHERE UID = %s
         ''', (
             request.form['name'],
+            request.form['email'],
             session['user_id']
         ))
         
@@ -505,51 +518,6 @@ def add_money():
         
     finally:
         cursor.close()
-    
-    return redirect(url_for('customer_dashboard'))
-
-#add package to database
-@app.route('/create_package', methods=['POST'])
-def add_package():
-    if 'user_id' not in session:
-        flash('Please login first', 'error')
-        return redirect(url_for('login'))
-    
-    package_shouse = request.form['houseNo']
-    package_sroad = request.form['road']
-    package_scity = request.form['city']
-    package_dhouse = request.form['receiver_houseNo']
-    package_droad = request.form['receiver_road']
-    package_dcity = request.form['receiver_city']
-    
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    cursor.execute('SELECT max(packageID) as count FROM package')
-    next_id = int(cursor.fetchone()['count']) + 1
-
-    if package_scity == package_dcity:
-        package_type = 'Local'
-    else:
-        package_type = 'Intercity'
-        cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_dcity.upper(),))
-        warehouse = cursor.fetchone()
-        if not warehouse:
-            flash('No warehouse found in the destination city', 'error')
-            return redirect(url_for('customer_dashboard'))
-        wh_id = warehouse['WarehouseID']
-
-    cursor.execute('''
-        INSERT INTO package (packageID, S_houseNo, S_street, S_city,
-            D_HouseNo, D_street, D_city, type, WarehouseID)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                   ''',
-            (next_id, package_shouse, package_sroad, package_scity,
-             package_dhouse, package_droad, package_dcity, 
-             package_type, wh_id))
-
-    mysql.connection.commit()
-    cursor.close()
-    
     
     return redirect(url_for('customer_dashboard'))
         

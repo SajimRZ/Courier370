@@ -102,8 +102,8 @@
                             {% for package in packages %}
                             <tr>
                                 <td>{{ package.PackageID }}</td>
-                                <td>{{ package.S_city }}</td>
-                                <td>{{ package.D_city }}</td>
+                                <td>{{ package.pickup }}</td>
+                                <td>{{ package.destination }}</td>
                                 <td>
                                     <button class="btn btn-accept btn-sm accept-btn" action = "/my_package">
                                         <i class="fas fa-check"></i> Accept
