@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 import re
@@ -331,27 +331,138 @@ def customer_dashboard():
     cursor.close()
     return render_template('customer_dashboard.html', customer = customer)
 
-@app.route('/courier_dashboard', methods = ['GET', 'POST'])
+## Courier Dashboard
+@app.route('/courier_dashboard')
 def courier_dashboard():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
-    cursor.execute('SELECT * FROM user u, courier c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
-    courier = cursor.fetchone()
-    cursor.execute("SELECT PackageID, CONCAT_WS(', ', S_houseNo, S_street, S_city) as pickup, CONCAT_WS(', ', D_HouseNo, D_street, D_city) as destination FROM package") #type filtering todo
-    packages = cursor.fetchall()  
-    cursor.close()
-    return render_template('courier_dashboard.html', courier = courier, packages = packages)
-
-## Courier Dashboard
-@app.route('/courier_dashboard', methods=['GET', 'POST'])
-def courier_dashboard_action():
-    if 'user_id' not in session:    
-        return redirect(url_for('login'))   
+    try:
+        # Get courier info
+        cursor.execute('''
+            SELECT u.*, c.* 
+            FROM user u
+            JOIN courier c ON u.UID = c.UID 
+            WHERE u.UID = %s
+        ''', (session['user_id'],))
+        courier = cursor.fetchone()
+        
+        # Available packages (progress = 0)
+        cursor.execute('''
+            SELECT p.PackageID, 
+                   CONCAT_WS(', ', p.S_houseNo, p.S_street, p.S_city) as pickup, 
+                   CONCAT_WS(', ', p.D_HouseNo, p.D_street, p.D_city) as destination
+            FROM package p
+            JOIN creates c ON p.PackageID = c.PackageID
+            JOIN orders o ON c.OrderID = o.OrderID
+            WHERE o.progress = 0
+        ''')
+        packages = cursor.fetchall()
+        
+        # My packages (assigned but not delivered)
+        cursor.execute('''
+            SELECT p.PackageID
+            FROM package p
+            JOIN delivered_by d ON p.PackageID = d.PackageID
+            JOIN orders o ON d.OrderID = o.OrderID
+            WHERE o.progress = 0 AND d.CourierID = %s
+        ''', (session['user_id'],))
+        my_packages = cursor.fetchall()
+        
+        return render_template('courier_dashboard.html', 
+                            courier=courier, 
+                            packages=packages,
+                            my_packages=my_packages)
     
-    return render_template('courier_dashboard.html')
+    except Exception as e:
+        flash(f"Database error: {str(e)}", "danger")
+        return redirect(url_for('login'))
+    finally:
+        cursor.close()
+
+
+@app.route('/accept_package/<package_id>', methods=['POST'])
+def accept_package(package_id):
+    if 'user_id' not in session:
+        flash('Not logged in', 'danger')
+        return redirect(url_for('login'))
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    try:
+        # Check package availability
+        cursor.execute("""
+            SELECT o.OrderID 
+            FROM creates c
+            JOIN orders o ON c.OrderID = o.OrderID
+            WHERE c.PackageID = %s AND o.progress = 0
+        """, (package_id,))
+        order = cursor.fetchone()
+        
+        if not order:
+            flash('Package not available', 'danger')
+            return redirect(url_for('courier_dashboard'))
+        
+        # Only add to delivered_by table without changing progress
+        cursor.execute("""
+            INSERT INTO delivered_by (PackageID, CourierID, OrderID)
+            VALUES (%s, %s, %s)
+        """, (package_id, session['user_id'], order['OrderID']))
+        
+        mysql.connection.commit()
+        flash('Package accepted successfully! It will remain available until delivery is confirmed.', 'success')
+    
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error accepting package: {str(e)}', 'danger')
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('courier_dashboard'))
+
+
+@app.route('/complete_package/<package_id>', methods=['POST'])
+def complete_package(package_id):
+    if 'user_id' not in session:
+        flash('Not logged in', 'danger')
+        return redirect(url_for('login'))
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    try:
+        # Verify package ownership
+        cursor.execute("""
+            SELECT o.OrderID 
+            FROM delivered_by d
+            JOIN orders o ON d.OrderID = o.OrderID
+            WHERE d.PackageID = %s AND d.CourierID = %s AND o.progress = 0
+        """, (package_id, session['user_id']))
+        order = cursor.fetchone()
+        
+        if not order:
+            flash('Package not found or not assigned to you', 'danger')
+            return redirect(url_for('courier_dashboard'))
+        
+        # Mark package as delivered (progress = 2)
+        cursor.execute("""
+            UPDATE orders 
+            SET progress = 2 
+            WHERE OrderID = %s
+        """, (order['OrderID'],))
+        
+        mysql.connection.commit()
+        flash('Package marked as delivered!', 'success')
+    
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error completing package: {str(e)}', 'danger')
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('courier_dashboard'))
+
 
 ## Click action in customer dashboard
 @app.route('/handle_click/<action>')
@@ -446,42 +557,9 @@ def update_profile_courier():
         mysql.connection.commit()
         flash('Profile updated successfully!', 'success')
         
-    
-        
     finally:
         cursor.close()
     
-    return redirect(url_for('courier_dashboard'))
-
-#accept package (incomplete)
-@app.route('/accept_package/<package_id>', methods=['POST'])
-def accept_package(package_id):
-    if 'courier_id' not in session:
-        flash('Please login first', 'error')
-        return redirect(url_for('login'))
-    
-    cursor = mysql.connection.cursor()
-
-    # try:
-    #     cursor.execute("SELECT * FROM package WHERE packageID = %s", (package_id)) #forgot how to sql
-    #     package = cursor.fetchone()
-
-    #     if not package:
-    #         return jsonify({'success': False, 'message': 'Package not found'})
-        
-    #     if package.status != 'Available':
-    #         return jsonify({'success': False, 'message': 'Package already taken'})
-        
-    # package.status = 'In Transit'
-    # package.courier_id = session['courier_id']
-    # db.session.commit()
-    
-    #return jsonify({'success': True})
-
-#recieve package for transfer
-@app.route('/my_package', methods=['GET', 'POST'])
-def my_package():
-    print("kisu akta/it works")
     return redirect(url_for('courier_dashboard'))
 
 #add money to wallet
