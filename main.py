@@ -331,8 +331,8 @@ def customer_dashboard():
     customer = cursor.fetchone()  
 
     cursor.execute('''
-        SELECT * FROM package p, creates c, orders o
-        WHERE p.PackageID = c.PackageID AND c.OrderID = o.OrderID AND c.customerID = %s
+        SELECT * FROM package p
+        WHERE p.PackageID and p.customerID = %s
     ''', (session['user_id'],))
     unconfirmed_orders = cursor.fetchall()
     
