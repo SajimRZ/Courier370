@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 07, 2025 at 05:09 PM
+-- Generation Time: May 09, 2025 at 12:19 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,19 +62,8 @@ CREATE TABLE `courier` (
 --
 
 INSERT INTO `courier` (`UID`, `name`, `city`, `licenseNo`, `type`) VALUES
-(1003, 'aa', 'bbbb', 'aa', 'motorcyle');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `creates`
---
-
-CREATE TABLE `creates` (
-  `CustomerID` int(10) NOT NULL,
-  `OrderID` varchar(10) NOT NULL,
-  `PackageID` varchar(10) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+(1003, 'aa', 'bbbb', 'aa', 'motorcyle'),
+(1004, 'courier', 'Uttara', '164235', 'motorcyle');
 
 -- --------------------------------------------------------
 
@@ -95,31 +84,8 @@ CREATE TABLE `customer` (
 
 INSERT INTO `customer` (`UID`, `houseNo`, `road`, `city`) VALUES
 (1001, '5/2', 'Mirpur', 'Dhaka'),
-(1002, 'ss', 'ss', 'ss');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `delivered_by`
---
-
-CREATE TABLE `delivered_by` (
-  `PackageID` varchar(10) NOT NULL,
-  `CourierID` int(10) NOT NULL,
-  `OrderID` varchar(10) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `orders`
---
-
-CREATE TABLE `orders` (
-  `OrderID` varchar(10) NOT NULL,
-  `progress` tinyint(1) NOT NULL,
-  `AdminID` int(10) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+(1002, 'ss', 'ss', 'ss'),
+(1005, '15', 'Uttara', '9');
 
 -- --------------------------------------------------------
 
@@ -132,12 +98,22 @@ CREATE TABLE `package` (
   `S_houseNo` varchar(20) NOT NULL,
   `S_street` varchar(20) NOT NULL,
   `S_city` varchar(20) NOT NULL,
-  `D_HouseNo` varchar(20) NOT NULL,
+  `D_houseNo` varchar(20) NOT NULL,
   `D_street` varchar(20) NOT NULL,
   `D_city` varchar(20) NOT NULL,
   `type` varchar(20) NOT NULL,
-  `WarehouseID` varchar(10) NOT NULL
+  `status` varchar(20) NOT NULL,
+  `WarehouseID` varchar(10) NOT NULL,
+  `CourierID` int(4) NOT NULL,
+  `CustomerID` int(4) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `package`
+--
+
+INSERT INTO `package` (`PackageID`, `S_houseNo`, `S_street`, `S_city`, `D_houseNo`, `D_street`, `D_city`, `type`, `status`, `WarehouseID`, `CourierID`, `CustomerID`) VALUES
+('abcd', '1', '2', 'Uttara', '3', '4', 'Uttara', 'sss', '', '1', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -149,17 +125,18 @@ CREATE TABLE `payment` (
   `acc_number` varchar(10) NOT NULL,
   `amount` int(20) NOT NULL,
   `method` varchar(20) NOT NULL,
-  `UID` int(10) NOT NULL
+  `UID` int(10) NOT NULL,
+  `purpose` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `payment`
 --
 
-INSERT INTO `payment` (`acc_number`, `amount`, `method`, `UID`) VALUES
-('112', 1, 'debit_card', 1001),
-('222-333', 15, 'debit_card', 1001),
-('222-333', 10, 'net_banking', 1001);
+INSERT INTO `payment` (`acc_number`, `amount`, `method`, `UID`, `purpose`) VALUES
+('112', 1, 'debit_card', 1001, ''),
+('222-333', 15, 'debit_card', 1001, ''),
+('222-333', 10, 'net_banking', 1001, '');
 
 -- --------------------------------------------------------
 
@@ -207,7 +184,9 @@ CREATE TABLE `user` (
 INSERT INTO `user` (`UID`, `email`, `name`, `password`, `phone`, `AdminID`, `wallet`) VALUES
 (1001, 'reaz@gmail.com', 'Reaz', 'reaz123', 1842308890, 1, 310),
 (1002, 'sss@sss', 'sss', 'ss', 2147483647, 4, 0),
-(1003, 'aa@aa', 'aaaaa', 'aa', 22, 1, 0);
+(1003, 'aa@aa', 'aaaaa', 'aa', 22, 1, 0),
+(1004, 'courier@gmail.com', 'courier', '1234', 1234567890, 2, 0),
+(1005, 'idur@gmail.com', 'Idur', '1234', 1234567890, 4, 0);
 
 -- --------------------------------------------------------
 
@@ -249,33 +228,10 @@ ALTER TABLE `courier`
   ADD KEY `FK_UID_courier` (`UID`);
 
 --
--- Indexes for table `creates`
---
-ALTER TABLE `creates`
-  ADD KEY `CustomerID` (`CustomerID`),
-  ADD KEY `OrderID` (`OrderID`),
-  ADD KEY `PackageID` (`PackageID`);
-
---
 -- Indexes for table `customer`
 --
 ALTER TABLE `customer`
   ADD KEY `FK_UID` (`UID`);
-
---
--- Indexes for table `delivered_by`
---
-ALTER TABLE `delivered_by`
-  ADD KEY `CourierID` (`CourierID`),
-  ADD KEY `OrderID` (`OrderID`),
-  ADD KEY `PackageID` (`PackageID`);
-
---
--- Indexes for table `orders`
---
-ALTER TABLE `orders`
-  ADD PRIMARY KEY (`OrderID`),
-  ADD KEY `AdminID` (`AdminID`);
 
 --
 -- Indexes for table `package`
@@ -316,65 +272,16 @@ ALTER TABLE `courier`
   ADD CONSTRAINT `FK_UID_courier` FOREIGN KEY (`UID`) REFERENCES `user` (`UID`);
 
 --
--- Constraints for table `creates`
---
-ALTER TABLE `creates`
-  ADD CONSTRAINT `creates_ibfk_1` FOREIGN KEY (`CustomerID`) REFERENCES `customer` (`UID`),
-  ADD CONSTRAINT `creates_ibfk_2` FOREIGN KEY (`OrderID`) REFERENCES `orders` (`OrderID`),
-  ADD CONSTRAINT `creates_ibfk_3` FOREIGN KEY (`PackageID`) REFERENCES `package` (`PackageID`);
-
---
 -- Constraints for table `customer`
 --
 ALTER TABLE `customer`
   ADD CONSTRAINT `FK_UID` FOREIGN KEY (`UID`) REFERENCES `user` (`UID`);
 
 --
--- Constraints for table `delivered_by`
---
-ALTER TABLE `delivered_by`
-  ADD CONSTRAINT `delivered_by_ibfk_1` FOREIGN KEY (`CourierID`) REFERENCES `courier` (`UID`),
-  ADD CONSTRAINT `delivered_by_ibfk_2` FOREIGN KEY (`OrderID`) REFERENCES `orders` (`OrderID`),
-  ADD CONSTRAINT `delivered_by_ibfk_3` FOREIGN KEY (`PackageID`) REFERENCES `package` (`PackageID`);
-
---
--- Constraints for table `orders`
---
-ALTER TABLE `orders`
-  ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`AdminID`) REFERENCES `admin` (`AdminID`);
-
---
 -- Constraints for table `package`
 --
 ALTER TABLE `package`
   ADD CONSTRAINT `package_ibfk_1` FOREIGN KEY (`WarehouseID`) REFERENCES `warehouse` (`WarehouseID`);
-
---
--- Constraints for table `pays`
---
-ALTER TABLE `pays`
-  ADD CONSTRAINT `pays_ibfk_1` FOREIGN KEY (`CustomerID`) REFERENCES `customer` (`UID`),
-  ADD CONSTRAINT `pays_ibfk_2` FOREIGN KEY (`OrderID`) REFERENCES `orders` (`OrderID`),
-  ADD CONSTRAINT `pays_ibfk_3` FOREIGN KEY (`PaymentID`) REFERENCES `payment` (`PaymentID`);
-
---
--- Constraints for table `transfer`
---
-ALTER TABLE `transfer`
-  ADD CONSTRAINT `transfer_ibfk_1` FOREIGN KEY (`From_WH`) REFERENCES `warehouse` (`WarehouseID`),
-  ADD CONSTRAINT `transfer_ibfk_2` FOREIGN KEY (`To_WH`) REFERENCES `warehouse` (`WarehouseID`);
-
---
--- Constraints for table `user`
---
-ALTER TABLE `user`
-  ADD CONSTRAINT `FK_adminID` FOREIGN KEY (`AdminID`) REFERENCES `admin` (`AdminID`);
-
---
--- Constraints for table `warehouse`
---
-ALTER TABLE `warehouse`
-  ADD CONSTRAINT `FK_adminID_w` FOREIGN KEY (`AdminID`) REFERENCES `admin` (`AdminID`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
