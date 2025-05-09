@@ -73,8 +73,8 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="row">
-                    <div class="col-md-12 mb-4">
+                <div class="row-md-12">
+                    <div class="col-md-12">
                         {% with messages = get_flashed_messages(with_categories=true) %}
                             {% if messages %}
                                 {% for category, message in messages %}
@@ -100,15 +100,50 @@
                                         Add Money
                                     </button>
                                 </div>
+                            </div>
                         </div>
 
                     </div>
                     <div class="col-md-12">
-                        <button class="btn btn-primary w-100 grow-on-hover" style="height: 50px;" data-bs-toggle="modal" data-bs-target="#createPackageModal">Create Package</button>
+                        <button class="btn btn-primary w-100 grow-on-hover" style="height: 50px;" data-bs-toggle="modal" data-bs-target="#createPackageModal">
+                            Send Package
+                        </button>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5 class="card-title">My Packages</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Package ID</th>
+                                            <th>Destination</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for i in unconfirmed_orders %}
+                                            <tr>
+                                                <td>{{ i.package_id }}</td>
+                                                <td>{{ i.D_HouseNo }}, {{ i.D_street }}, {{ i.D_city }}</td>
+                                                <td>{{ i.progress }}</td>
+                                                {% if i.progress == "Unconfirmed" %}
+                                                    <td><button class="btn btn-info">Confirm</button></td>
+                                                {% endif  i.progress == "" %}
+                                                
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-      
+        </div>
     </div>
 
 
