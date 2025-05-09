@@ -364,7 +364,7 @@ def courier_dashboard():
             FROM package p
             JOIN creates c ON p.PackageID = c.PackageID
             JOIN orders o ON c.OrderID = o.OrderID
-            WHERE o.progress = 0
+            WHERE o.progress = 0 
         ''')
         packages = cursor.fetchall()
         
@@ -469,18 +469,6 @@ def complete_package(package_id):
         cursor.close()
     
     return redirect(url_for('courier_dashboard'))
-
-
-## Click action in customer dashboard
-@app.route('/handle_click/<action>')
-def handle_click(action):
-    #Profile
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    if action == 'profile':
-        cursor.execute('SELECT * FROM user u, customer c where c.UID = u.UID and c.UID = %s', (session['user_id'],))
-        user_info = cursor.fetchone()
-    cursor.close
-    return render_template('profile.html', user=user_info)      
 
 
 ##Update user profile
@@ -591,7 +579,7 @@ def add_money():
             cursor.execute('UPDATE user SET wallet = %s WHERE UID = %s', (new_balance, session['user_id']))
             mysql.connection.commit()
 
-            cursor.execute('INSERT INTO payment (acc_number, amount, method, UID) VALUES (%s, %s, %s, %s)', (acc_number, int(amount), payment_method, session['user_id']))
+            #cursor.execute('INSERT INTO payment (acc_number, amount, method, UID) VALUES (%s, %s, %s, %s)', (acc_number, int(amount), payment_method, session['user_id']))
             mysql.connection.commit()
             flash('Money added successfully!', 'success')
         else:
@@ -655,13 +643,7 @@ def add_package():
             wh_id = warehouse['WarehouseID']
 
         #Make the package
-        cursor.execute('''
-            INSERT INTO package (packageID, S_houseNo, S_street, S_city,
-                D_HouseNo, D_street, D_city, type, WarehouseID)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ''',(next_id, package_shouse, package_sroad, package_scity,
-        package_dhouse, package_droad, package_dcity, package_type, wh_id))
-        mysql.connection.commit()
+        
         
         #get the order id for the new order
         cursor.execute('SELECT max(OrderID) as count FROM orders')
@@ -672,17 +654,7 @@ def add_package():
         admin_id = int(cursor.fetchone()['AdminID'])
         print
         #insert an unconfirmed order into the orders table
-        cursor.execute('''        
-            INSERT INTO orders (OrderID, progress, AdminID)
-            VALUES (%s, %s, %s)
-        ''', (order_id,'Unconfirmed', admin_id))
-        mysql.connection.commit()
-        
-        #connect the order, package and customer
-        cursor.execute('''
-            INSERT INTO creates (customerID, OrderID, PackageID)
-            VALUES (%s, %s, %s)
-        ''', (session['user_id'], order_id, next_id))
+
         mysql.connection.commit()
     
     
