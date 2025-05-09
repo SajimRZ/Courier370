@@ -328,8 +328,15 @@ def customer_dashboard():
     
     cursor.execute('SELECT * FROM user u, customer c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
     customer = cursor.fetchone()  
+
+    cursor.execute('''
+        SELECT * FROM package p, creates c, orders o
+        WHERE p.PackageID = c.PackageID AND c.OrderID = o.OrderID AND c.customerID = %s
+    ''', (session['user_id'],))
+    unconfirmed_orders = cursor.fetchall()
+    
     cursor.close()
-    return render_template('customer_dashboard.html', customer = customer)
+    return render_template('customer_dashboard.html', customer = customer, unconfirmed_orders = unconfirmed_orders)
 
 @app.route('/courier_dashboard', methods = ['GET', 'POST'])
 def courier_dashboard():
@@ -523,34 +530,73 @@ def add_package():
     package_dcity = request.form['receiver_city']
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    cursor.execute('SELECT max(packageID) as count FROM package')
-    next_id = int(cursor.fetchone()['count']) + 1
-
-    if package_scity == package_dcity:
-        package_type = 'Local'
-    else:
-        package_type = 'Intercity'
-        cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_dcity.upper(),))
-        warehouse = cursor.fetchone()
-        if not warehouse:
-            flash('No warehouse found in the destination city', 'error')
+    #Check if all data is filled up
+    if not all([package_shouse, package_sroad, package_scity, package_dhouse, package_droad, package_dcity]):
+        flash('Please fill all fields', 'error')
+        return redirect(url_for('customer_dashboard'))
+    #Check if the sender and receiver address are the same
+    elif package_shouse == package_dhouse and package_sroad == package_droad and package_scity == package_dcity:
+            flash('Sender and receiver addresses cannot be the same', 'error')
             return redirect(url_for('customer_dashboard'))
-        wh_id = warehouse['WarehouseID']
+    try:   
+        #get package id for new package
+        cursor.execute('SELECT max(packageID) as count FROM package')
+        next_id = cursor.fetchone()['count']
+        next_id = 1 if next_id is None else int(next_id) + 1
+        
+        #get warehouse id for the package
+        if package_scity == package_dcity:
+            package_type = 'Local'
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_scity.upper(),))
+            warehouse = cursor.fetchone()
+            if not warehouse:
+                flash('No warehouse found in the destination city', 'error')
+                return redirect(url_for('customer_dashboard'))
+            wh_id = warehouse['WarehouseID']
 
-    cursor.execute('''
-        INSERT INTO package (packageID, S_houseNo, S_street, S_city,
-            D_HouseNo, D_street, D_city, type, WarehouseID)
+        else:
+            package_type = 'Intercity'
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_dcity.upper(),))
+            warehouse = cursor.fetchone()
+            if not warehouse:
+                flash('No warehouse found in the destination city', 'error')
+                return redirect(url_for('customer_dashboard'))
+            wh_id = warehouse['WarehouseID']
+
+        #Make the package
+        cursor.execute('''
+            INSERT INTO package (packageID, S_houseNo, S_street, S_city,
+                D_HouseNo, D_street, D_city, type, WarehouseID)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                   ''',
-            (next_id, package_shouse, package_sroad, package_scity,
-             package_dhouse, package_droad, package_dcity, 
-             package_type, wh_id))
-
-    mysql.connection.commit()
-    cursor.close()
+        ''',(next_id, package_shouse, package_sroad, package_scity,
+        package_dhouse, package_droad, package_dcity, package_type, wh_id))
+        mysql.connection.commit()
+        
+        #get the order id for the new order
+        cursor.execute('SELECT max(OrderID) as count FROM orders')
+        order_id = cursor.fetchone()['count']
+        order_id = 1 if order_id is None else int(order_id) + 1
+        #get admin id for the new order
+        cursor.execute('SELECT AdminID from user WHERE UID = %s', (session['user_id'],))
+        admin_id = int(cursor.fetchone()['AdminID'])
+        print
+        #insert an unconfirmed order into the orders table
+        cursor.execute('''        
+            INSERT INTO orders (OrderID, progress, AdminID)
+            VALUES (%s, %s, %s)
+        ''', (order_id,'Unconfirmed', admin_id))
+        mysql.connection.commit()
+        
+        #connect the order, package and customer
+        cursor.execute('''
+            INSERT INTO creates (customerID, OrderID, PackageID)
+            VALUES (%s, %s, %s)
+        ''', (session['user_id'], order_id, next_id))
+        mysql.connection.commit()
     
     
+    finally:
+        cursor.close()   
     return redirect(url_for('customer_dashboard'))
         
         
