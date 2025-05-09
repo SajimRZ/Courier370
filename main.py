@@ -51,6 +51,7 @@ def login():
             if courier_check == None:
                 return redirect(url_for('customer_dashboard'))
             else:
+                session["courier_type"] = courier_check["type"]
                 return redirect(url_for('courier_dashboard'))
                 
             
@@ -358,30 +359,33 @@ def courier_dashboard():
         
         # Available packages (progress = 0)
         cursor.execute('''
-            SELECT p.PackageID, 
-                   CONCAT_WS(', ', p.S_houseNo, p.S_street, p.S_city) as pickup, 
-                   CONCAT_WS(', ', p.D_HouseNo, p.D_street, p.D_city) as destination
-            FROM package p
-            JOIN creates c ON p.PackageID = c.PackageID
-            JOIN orders o ON c.OrderID = o.OrderID
-            WHERE o.progress = 0
+            SELECT *
+            FROM package p, warehouse w 
+            WHERE p.WarehouseID = w.WarehouseID and p.status = 'confirmed'
         ''')
         packages = cursor.fetchall()
+
+        # cursor.execute('''
+        #     SELECT * 
+        #     FROM warehouse
+        #     WHERE status = 'confirmed'
+        # ''')
         
         # My packages (assigned but not delivered)
-        cursor.execute('''
-            SELECT p.PackageID
-            FROM package p
-            JOIN delivered_by d ON p.PackageID = d.PackageID
-            JOIN orders o ON d.OrderID = o.OrderID
-            WHERE o.progress = 0 AND d.CourierID = %s
-        ''', (session['user_id'],))
-        my_packages = cursor.fetchall()
+        # cursor.execute('''
+        #     SELECT p.PackageID
+        #     FROM package p
+        #     JOIN delivered_by d ON p.PackageID = d.PackageID
+        #     JOIN orders o ON d.OrderID = o.OrderID
+        #     WHERE o.progress = 0 AND d.CourierID = %s
+        # ''', (session['user_id'],))
+        # my_packages = cursor.fetchall()
         
         return render_template('courier_dashboard.html', 
                             courier=courier, 
                             packages=packages,
-                            my_packages=my_packages)
+                            #my_packages=my_packages
+                            )
     
     except Exception as e:
         flash(f"Database error: {str(e)}", "danger")

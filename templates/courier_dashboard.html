@@ -101,9 +101,16 @@
                         <tbody>
                             {% for package in packages %}
                             <tr>
+                                {% if package.status == 'confirmed' and session['courier_type'] == 'motorcyle' %} <!--CHANGE to 'motorcycle'-->
                                 <td>{{ package.PackageID }}</td>
-                                <td>{{ package.pickup }}</td>
-                                <td>{{ package.destination }}</td>
+                                <td>{{ package.S_houseNo }}, {{ package.S_street}}, {{ package.S_city}}</td>
+                                <td>{{ package.Area }}, {{ package.City}}</td>
+                                {% elif 
+                                    package.status == 'standby' and session['courier_type'] == 'motorcyle' %} <!--CHANGE this too -->
+                                <td>{{ package.PackageID }}</td>
+                                <td>{{ package.Area }}, {{ package.City}}</td>
+                                <td>{{ package.D_houseNo }}, {{ package.D_street}}, {{ package.D_city}}</td>
+                                {% endif %}
                                 <td>
                                     <button class="btn btn-accept btn-sm" onclick="acceptPackage('{{ package.PackageID }}')">
                                         <i class="fas fa-check"></i> Accept
