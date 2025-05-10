@@ -642,12 +642,12 @@ def add_package():
 
         else:
             package_type = 'intercity'
-            cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_dcity.upper(),))
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_scity.upper(),))
             warehouse = cursor.fetchone()
             if not warehouse:
                 flash('No warehouse found in the destination city', 'error')
                 return redirect(url_for('customer_dashboard'))
-            cursor.execute('SELECT * FROM warehouse WHERE UPPER(Area) = %s and UPPER(City) = %s LIMIT 1', (package_droad.upper(),package_dcity.upper(),))
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(Area) = %s and UPPER(City) = %s LIMIT 1', (package_sroad.upper(),package_scity.upper(),))
             wh_area = cursor.fetchone()
             
             if not wh_area:
@@ -719,6 +719,8 @@ def clear_dummy_data():
         cursor.close()
     return redirect(url_for('login'))    
 
+
+#Confirm Package acter creating
 @app.route('/confirm_package', methods=['POST'])
 def confirm_package():
     if 'user_id' not in session:
