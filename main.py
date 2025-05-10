@@ -322,7 +322,8 @@ def create_warehouse():
 ## Customer Dashboard
 @app.route('/customer_dashboard', methods = ['GET', 'POST'])
 def customer_dashboard():
-    
+    if 'user_id' not in session or not session.get('is_admin'):
+        return redirect(url_for('login'))
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
