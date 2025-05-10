@@ -359,12 +359,26 @@ def courier_dashboard():
         
         # Available packages
         cursor.execute('''
+            SELECT city
+            FROM courier
+            WHERE UID = %s
+            ''', (session['user_id'],))
+        c = cursor.fetchone()['city']
+
+        cursor.execute('''
             SELECT *
             FROM package p, warehouse w 
-            WHERE p.WarehouseID = w.WarehouseID and p.status IN ('confirmed', 'standby')
-        ''')
+            WHERE p.WarehouseID = w.WarehouseID and p.S_city = %s and p.status IN ('confirmed', 'standby')
+            ''', (c,))
         packages = cursor.fetchall()
-
+        
+        # My packages
+        cursor.execute('''
+            SELECT *
+            FROM package p
+            WHERE CourierID = %s AND p.status IN ('picked up', 'sending')
+        ''', (session['user_id'],))
+        my_packages = cursor.fetchall()
         # cursor.execute('''
         #     SELECT * 
         #     FROM warehouse
@@ -383,8 +397,8 @@ def courier_dashboard():
         
         return render_template('courier_dashboard.html', 
                             courier=courier, 
-                            packages=packages
-                            #my_packages=my_packages
+                            packages=packages,
+                            my_packages=my_packages
                             )
     
     except Exception as e:
@@ -394,33 +408,23 @@ def courier_dashboard():
         cursor.close()
 
 
-@app.route('/accept_package/<package_id>', methods=['POST'])
-def accept_package(package_id):
+@app.route('/accept_package', methods=['POST'])
+def accept_package():
     if 'user_id' not in session:
         flash('Not logged in', 'danger')
         return redirect(url_for('login'))
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
+    PackageID = request.form['PackageID']
+    status = request.form['status']
+
     try:
-        # Check package availability
         cursor.execute("""
-            SELECT o.OrderID 
-            FROM creates c
-            JOIN orders o ON c.OrderID = o.OrderID
-            WHERE c.PackageID = %s AND o.progress = 0
-        """, (package_id,))
-        order = cursor.fetchone()
-        
-        if not order:
-            flash('Package not available', 'danger')
-            return redirect(url_for('courier_dashboard'))
-        
-        # Only add to delivered_by table without changing progress
-        cursor.execute("""
-            INSERT INTO delivered_by (PackageID, CourierID, OrderID)
-            VALUES (%s, %s, %s)
-        """, (package_id, session['user_id'], order['OrderID']))
+            UPDATE package 
+            SET status = %s , CourierID = %s
+            WHERE packageID = %s
+        """, ( status, session['user_id'], PackageID ))
         
         mysql.connection.commit()
         flash('Package accepted successfully! It will remain available until delivery is confirmed.', 'success')

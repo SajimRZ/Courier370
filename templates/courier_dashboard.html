@@ -116,9 +116,17 @@
 
                                 {% endif %}
                                 <td>
-                                    <button class="btn btn-accept btn-sm" onclick="acceptPackage('{{ package.PackageID }}')">
-                                        <i class="fas fa-check"></i> Accept
-                                    </button>
+                                    <form method="POST" action="{{ url_for('accept_package') }}">
+                                        <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
+                                        {% if package.status == 'confirmed' %}
+                                        <input type="hidden" name="status" value="picked up">
+                                        {% elif package.status == 'standby' %}
+                                        <input type="hidden" name="status" value="sending">
+                                        {% endif %}
+                                        <button class="btn btn-accept btn-sm">
+                                            <i class="fas fa-check"></i> Accept <!-- ACCEPT BUTTON -->
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -183,25 +191,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function acceptPackage(packageId) {
-            if (confirm('Are you sure you want to accept this package?')) {
-                fetch(`/accept_package/${packageId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                })
-                .then(response => {
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-            }
-        }
-
         function completePackage(packageId) {
             if (confirm('Are you sure you want to mark this package as delivered?')) {
                 fetch(`/complete_package/${packageId}`, {
