@@ -125,7 +125,7 @@ def customer_signup():
 
             cursor.execute('INSERT INTO user (UID, email, name, password, phone, AdminID) VALUES (%s, %s, %s, %s, %s, %s)', (next_id, signup_data['email'], signup_data['name'], signup_data['password'], signup_data['phone'], admin_id))
             #insert into customer table
-            cursor.execute('INSERT INTO customer (UID, houseNo, road, city) VALUES (%s, %s, %s, %s)', (next_id, houseNo, city, road))
+            cursor.execute('INSERT INTO customer (UID, houseNo, road, city) VALUES (%s, %s, %s, %s)', (next_id, houseNo, road, city))
             
             mysql.connection.commit()
             #if all good go back to login page
@@ -587,7 +587,7 @@ def add_money():
             cursor.execute('UPDATE user SET wallet = %s WHERE UID = %s', (new_balance, session['user_id']))
             mysql.connection.commit()
 
-            #cursor.execute('INSERT INTO payment (acc_number, amount, method, UID) VALUES (%s, %s, %s, %s)', (acc_number, int(amount), payment_method, session['user_id']))
+            cursor.execute('INSERT INTO payment (acc_number, amount, method, UID,purpose) VALUES (%s, %s, %s, %s,%s)', (acc_number, int(amount), payment_method, session['user_id'], 'recharge'))
             mysql.connection.commit()
             flash('Money added successfully!', 'success')
         else:
@@ -629,39 +629,48 @@ def add_package():
         #get package id for new package
         cursor.execute('SELECT max(packageID) as count FROM package')
         next_id = cursor.fetchone()['count']
-        next_id = 1 if next_id is None else int(next_id) + 1
+        if next_id == None:
+            next_id = 1
+        else:
+            next_id = int(next_id)+1
         
         #get warehouse id for the package
         if package_scity == package_dcity:
-            package_type = 'Local'
+            package_type = 'local'
             cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_scity.upper(),))
             warehouse = cursor.fetchone()
             if not warehouse:
                 flash('No warehouse found in the destination city', 'error')
                 return redirect(url_for('customer_dashboard'))
-            wh_id = warehouse['WarehouseID']
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(Area) = %s and  UPPER(City) = %s LIMIT 1', (package_droad.upper(),package_scity.upper(),))
+            wh_area = cursor.fetchone()
+            
+            if not wh_area:
+                wh_id = warehouse['WarehouseID']
+            elif wh_area['Area'] == package_droad:
+                wh_id = wh_area['WarehouseID']
 
         else:
-            package_type = 'Intercity'
+            package_type = 'intercity'
             cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_dcity.upper(),))
             warehouse = cursor.fetchone()
             if not warehouse:
                 flash('No warehouse found in the destination city', 'error')
                 return redirect(url_for('customer_dashboard'))
-            wh_id = warehouse['WarehouseID']
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(Area) = %s and UPPER(City) = %s LIMIT 1', (package_droad.upper(),package_dcity.upper(),))
+            wh_area = cursor.fetchone()
+            
+            if not wh_area:
+                wh_id = warehouse['WarehouseID']
+            elif wh_area['Area'] == package_droad:
+                wh_id = wh_area['WarehouseID']
 
         #Make the package
-        
-        
-        #get the order id for the new order
-        cursor.execute('SELECT max(OrderID) as count FROM orders')
-        order_id = cursor.fetchone()['count']
-        order_id = 1 if order_id is None else int(order_id) + 1
-        #get admin id for the new order
-        cursor.execute('SELECT AdminID from user WHERE UID = %s', (session['user_id'],))
-        admin_id = int(cursor.fetchone()['AdminID'])
-        print
-        #insert an unconfirmed order into the orders table
+        cursor.execute('''
+            INSERT INTO package 
+            (PackageID,S_houseNo, S_street, S_city, D_houseNo, D_street, D_city, type, status, WarehouseID, courierID, customerID) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''', 
+            (next_id,package_shouse, package_sroad, package_scity, package_dhouse, package_droad, package_dcity,package_type,'unconfirmed', wh_id, -1, session['user_id']))
 
         mysql.connection.commit()
     
@@ -719,7 +728,69 @@ def clear_dummy_data():
     finally:
         cursor.close()
     return redirect(url_for('login'))    
+
+@app.route('/confirm_package', methods=['POST'])
+def confirm_package():
+    if 'user_id' not in session:
+        flash('Please login first', 'error')
+        return redirect(url_for('login'))
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    package_id = request.form['package_id']
+    account_number = request.form['acc_number']
+    payment_method = request.form['payment_method']
+    package_price = request.form['price']
+    package_type = request.form['type']
+    package_status = request.form['status']
+
+    # Check if all data is filled up        
+    if not all([account_number, payment_method]):
+        flash('Please fill all fields', 'error')
+        return redirect(url_for('customer_dashboard'))
+    
+    try:
+        # Check package availability
+        cursor.execute("""
+            SELECT * 
+            FROM package 
+            WHERE PackageID = %s
+        """, (package_id,))
+        package = cursor.fetchone()
         
+        if not package:
+            flash('Package not found or not assigned to you', 'danger')
+            return redirect(url_for('customer_dashboard'))
+        
+        # Mark package as confirmed (progress = 1)
+        cursor.execute("""
+            UPDATE package 
+            SET status = 'confirmed' 
+            WHERE PackageID = %s
+        """, (package_id,))
+
+        #deduct taka
+        cursor.execute("""
+        UPDATE user
+        SET wallet = wallet - %s
+        WHERE UID = %s
+        """, (package_price, session['user_id']))
+
+        cursor.execute('''
+            INSERT INTO payment (acc_number,amount,method,UID,purpose) VALUES (%s, %s, %s, %s, %s)
+            ''', (account_number, package_price, payment_method, session['user_id'], 'payment'))
+        
+        mysql.connection.commit()
+        flash('Package confirmed successfully!', 'success')
+    
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error confirming package: {str(e)}', 'danger')
+   
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('customer_dashboard'))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
