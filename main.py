@@ -368,7 +368,7 @@ def courier_dashboard():
         cursor.execute('''
             SELECT *
             FROM package p, warehouse w 
-            WHERE p.WarehouseID = w.WarehouseID and p.S_city = %s and p.status IN ('confirmed', 'standby')
+            WHERE p.WarehouseID = w.WarehouseID and p.S_city = %s and p.status IN ('confirmed', 'waiting')
             ''', (c,))
         packages = cursor.fetchall()
         
@@ -376,25 +376,10 @@ def courier_dashboard():
         cursor.execute('''
             SELECT *
             FROM package p
-            WHERE CourierID = %s AND p.status IN ('picked up', 'sending')
+            WHERE CourierID = %s AND p.status IN ('picking up', 'delivering')
         ''', (session['user_id'],))
         my_packages = cursor.fetchall()
-        # cursor.execute('''
-        #     SELECT * 
-        #     FROM warehouse
-        #     WHERE status = 'confirmed'
-        # ''')
-        
-        # My packages (assigned but not delivered)
-        # cursor.execute('''
-        #     SELECT p.PackageID
-        #     FROM package p
-        #     JOIN delivered_by d ON p.PackageID = d.PackageID
-        #     JOIN orders o ON d.OrderID = o.OrderID
-        #     WHERE o.progress = 0 AND d.CourierID = %s
-        # ''', (session['user_id'],))
-        # my_packages = cursor.fetchall()
-        
+
         return render_template('courier_dashboard.html', 
                             courier=courier, 
                             packages=packages,
@@ -438,34 +423,24 @@ def accept_package():
     return redirect(url_for('courier_dashboard'))
 
 
-@app.route('/complete_package/<package_id>', methods=['POST'])
+@app.route('/complete_package', methods=['POST'])
 def complete_package(package_id):
     if 'user_id' not in session:
         flash('Not logged in', 'danger')
         return redirect(url_for('login'))
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    PackageID = request.form['PackageID']
+    status = request.form['status']
     
     try:
         # Verify package ownership
         cursor.execute("""
-            SELECT o.OrderID 
-            FROM delivered_by d
-            JOIN orders o ON d.OrderID = o.OrderID
-            WHERE d.PackageID = %s AND d.CourierID = %s AND o.progress = 0
-        """, (package_id, session['user_id']))
-        order = cursor.fetchone()
-        
-        if not order:
-            flash('Package not found or not assigned to you', 'danger')
-            return redirect(url_for('courier_dashboard'))
-        
-        # Mark package as delivered (progress = 2)
-        cursor.execute("""
-            UPDATE orders 
-            SET progress = 2 
-            WHERE OrderID = %s
-        """, (order['OrderID'],))
+            UPDATE package 
+            SET status = %s
+            WHERE packageID = %s
+            """, ( status, PackageID))
         
         mysql.connection.commit()
         flash('Package marked as delivered!', 'success')

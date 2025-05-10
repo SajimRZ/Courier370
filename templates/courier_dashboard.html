@@ -101,12 +101,13 @@
                         <tbody>
                             {% for package in packages %}
                             <tr>
-                                {% if session['courier_type'] == 'motorcyle' %}
-                                    {% if package.status == 'confirmed' %} <!--CHANGE to 'motorcycle'-->
+                                {% if session['courier_type'] == 'motorcyle' %} <!--CHANGE to 'motorcycle'-->
+                                    {% if package.status == 'confirmed' %} 
                                     <td>{{ package.PackageID }}</td>
                                     <td>{{ package.S_houseNo }}, {{ package.S_street}}, {{ package.S_city}}</td>
                                     <td>{{ package.Area }}, {{ package.City}}</td>
-                                    {% elif package.status == 'standby' %} <!--CHANGE this too -->
+
+                                    {% elif package.status == 'standby' %}
                                     <td>{{ package.PackageID }}</td>
                                     <td>{{ package.Area }}, {{ package.City}}</td>
                                     <td>{{ package.D_houseNo }}, {{ package.D_street}}, {{ package.D_city}}</td>
@@ -119,9 +120,9 @@
                                     <form method="POST" action="{{ url_for('accept_package') }}">
                                         <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
                                         {% if package.status == 'confirmed' %}
-                                        <input type="hidden" name="status" value="picked up">
-                                        {% elif package.status == 'standby' %}
-                                        <input type="hidden" name="status" value="sending">
+                                        <input type="hidden" name="status" value="picking up">
+                                        {% elif package.status == 'waiting' %}
+                                        <input type="hidden" name="status" value="delivering">
                                         {% endif %}
                                         <button class="btn btn-accept btn-sm">
                                             <i class="fas fa-check"></i> Accept <!-- ACCEPT BUTTON -->
@@ -148,7 +149,16 @@
                             <tr>
                                 <td>{{ package.PackageID }}</td>
                                 <td>
-                                    <button class="btn btn-complete btn-sm" onclick="completePackage('{{ package.PackageID }}')">
+                                    <form method="POST" action="{{ url_for('complete_package') }}">
+                                        <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
+                                        {% if session['courier_type'] == 'motorcyle %}
+                                            {% if package.status == 'picking up' %}  <!-- FUCK YOU REAZ -->
+                                            <input type="hidden" name="status" value="waiting">
+                                            {% elif package.status == 'delivering' %}
+                                            <input type="hidden" name="status" value="finished">
+                                            {% endif %}
+                                        {% endif }
+                                    <button class="btn btn-complete btn-sm"">
                                         <i class="fas fa-check-circle"></i> Deliver
                                     </button>                                    
                                 </td>
