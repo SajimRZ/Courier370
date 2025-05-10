@@ -357,7 +357,7 @@ def courier_dashboard():
         ''', (session['user_id'],))
         courier = cursor.fetchone()
         
-        # Available packages (progress = 0)
+        # Available packages
         cursor.execute('''
             SELECT *
             FROM package p, warehouse w 
