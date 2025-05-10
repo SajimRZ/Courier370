@@ -361,7 +361,7 @@ def courier_dashboard():
         cursor.execute('''
             SELECT *
             FROM package p, warehouse w 
-            WHERE p.WarehouseID = w.WarehouseID and p.status = 'confirmed'
+            WHERE p.WarehouseID = w.WarehouseID and p.status IN ('confirmed', 'standby')
         ''')
         packages = cursor.fetchall()
 
@@ -383,7 +383,7 @@ def courier_dashboard():
         
         return render_template('courier_dashboard.html', 
                             courier=courier, 
-                            packages=packages,
+                            packages=packages
                             #my_packages=my_packages
                             )
     
