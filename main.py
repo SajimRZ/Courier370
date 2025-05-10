@@ -322,8 +322,7 @@ def create_warehouse():
 ## Customer Dashboard
 @app.route('/customer_dashboard', methods = ['GET', 'POST'])
 def customer_dashboard():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+    
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
@@ -365,11 +364,18 @@ def courier_dashboard():
             ''', (session['user_id'],))
         c = cursor.fetchone()['city']
 
-        cursor.execute('''
-            SELECT *
-            FROM package p, warehouse w 
-            WHERE p.WarehouseID = w.WarehouseID and p.S_city = %s and p.status IN ('confirmed', 'waiting')
-            ''', (c,))
+        if courier['type'] == 'motorcyle':
+            cursor.execute('''
+                SELECT *
+                FROM package p, warehouse w 
+                WHERE p.WarehouseID = w.WarehouseID and (p.S_city = %s or w.City = %s) and p.status IN ('confirmed', 'stand by')
+                ''', (c,c,))
+        else:
+            cursor.execute('''
+                SELECT *
+                FROM package p, warehouse w 
+                WHERE p.WarehouseID = w.WarehouseID and p.status IN ('waiting')
+                ''', (c,))
         packages = cursor.fetchall()
         
         # My packages
@@ -386,8 +392,10 @@ def courier_dashboard():
                             my_packages=my_packages
                             )
     
-    except Exception as e:
-        flash(f"Database error: {str(e)}", "danger")
+    except Exception as e: 
+        mysql.connection.rollback()
+        flash(f'Error fetching data: {str(e)}', 'danger')
+        print(e)
         return redirect(url_for('login'))
     finally:
         cursor.close()
@@ -424,7 +432,7 @@ def accept_package():
 
 
 @app.route('/complete_package', methods=['POST'])
-def complete_package(package_id):
+def complete_package():
     if 'user_id' not in session:
         flash('Not logged in', 'danger')
         return redirect(url_for('login'))
@@ -432,6 +440,7 @@ def complete_package(package_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     PackageID = request.form['PackageID']
+    pay = request.form['pay']
     status = request.form['status']
     
     try:
@@ -441,6 +450,11 @@ def complete_package(package_id):
             SET status = %s
             WHERE packageID = %s
             """, ( status, PackageID))
+        cursor.execute("""
+            UPDATE user
+            SET wallet = wallet + %s
+            WHERE UID = %s
+            """, (pay,session['user_id'],))
         
         mysql.connection.commit()
         flash('Package marked as delivered!', 'success')

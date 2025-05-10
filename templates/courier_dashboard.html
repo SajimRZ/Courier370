@@ -49,7 +49,7 @@
             </div>
         </div>
     </nav>
-    
+    <!--profile of courier-->
     <div class="container my-4">
         <div class="row"> 
             <div class="col-md-6 mb-4">
@@ -76,6 +76,7 @@
             </div>
             
             <div class="col-md-6">
+                <!--the error message-->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -87,6 +88,20 @@
                     {% endif %}
                 {% endwith %}
                 
+                <!--Wallet: increases when delivery completes-->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="wallet>">Wallet</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <h2 class="stat-value">Tk.{{ courier.wallet }}</h2>
+                            <p class="stat-label">Current Balance</p>           
+                        </div>
+                    </div>
+                </div>
+
+                <!-- List of Packages -->
                 <div class="table-responsive">
                     <h4 class="mb-3">Available Packages</h4>
                     <table class="table table-striped table-hover" id="availablePackages">
@@ -100,41 +115,50 @@
                         </thead>
                         <tbody>
                             {% for package in packages %}
-                            <tr>
-                                {% if session['courier_type'] == 'motorcyle' %} <!--CHANGE to 'motorcycle'-->
-                                    {% if package.status == 'confirmed' %} 
-                                    <td>{{ package.PackageID }}</td>
-                                    <td>{{ package.S_houseNo }}, {{ package.S_street}}, {{ package.S_city}}</td>
-                                    <td>{{ package.Area }}, {{ package.City}}</td>
-
-                                    {% elif package.status == 'standby' %}
-                                    <td>{{ package.PackageID }}</td>
-                                    <td>{{ package.Area }}, {{ package.City}}</td>
-                                    <td>{{ package.D_houseNo }}, {{ package.D_street}}, {{ package.D_city}}</td>
-                                    {% endif %}
-
-                                {# elif session is other vehicles #}
-
-                                {% endif %}
-                                <td>
-                                    <form method="POST" action="{{ url_for('accept_package') }}">
-                                        <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
-                                        {% if package.status == 'confirmed' %}
-                                        <input type="hidden" name="status" value="picking up">
-                                        {% elif package.status == 'waiting' %}
-                                        <input type="hidden" name="status" value="delivering">
+                                <tr>
+                                    <!-- packaages for motorcyle: onfirmed and stand by-->
+                                    {% if session['courier_type'] == 'motorcyle' %} <!--CHANGE to 'motorcycle'-->
+                                        
+                                        <!--things shown when status is confirmed-->
+                                        {% if package.status == 'confirmed' %} 
+                                            <td>{{ package.PackageID }}</td>
+                                            <td>{{ package.S_houseNo }}, {{ package.S_street}}, {{ package.S_city}}</td>
+                                            <td>{{ package.Area }}, {{ package.City}}</td>
+                                            <td>
+                                                <form method="POST" action="{{ url_for('accept_package') }}">
+                                                    <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
+                                                    <input type="hidden" name="status" value="picking up">
+                                                    <button class="btn btn-accept btn-sm">
+                                                        <i class="fas fa-check">Accept</i> <!-- ACCEPT BUTTON -->
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        <!-- things shown when package is stand by -->
+                                        {% elif package.status == 'stand by' %}
+                                            <td>{{ package.PackageID }}</td>
+                                            <td>{{ package.Area }}, {{ package.City}}</td>
+                                            <td>{{ package.D_houseNo }}, {{ package.D_street}}, {{ package.D_city}}</td>
+                                            <td>
+                                                <form method="POST" action="{{ url_for('accept_package') }}">
+                                                    <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
+                                                    <input type="hidden" name="status" value="delivering">
+                                                    <button class="btn btn-accept btn-sm">
+                                                        <i class="fas fa-check">Accept</i>  <!-- ACCEPT BUTTON -->
+                                                    </button>
+                                                </form>
+                                            </td>
                                         {% endif %}
-                                        <button class="btn btn-accept btn-sm">
-                                            <i class="fas fa-check"></i> Accept <!-- ACCEPT BUTTON -->
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
+
+                                    <!--{# elif session is other vehicles #}-->
+
+                                    {% endif %}
+                                </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 
+                <!-- List of Packages that are accepted -->
                 <div class="table-responsive">
                     <h4 class="mb-3">My Packages</h4>
                     <table class="table table-striped table-hover" id="myPackages">
@@ -146,23 +170,33 @@
                         </thead>
                         <tbody>
                             {% for package in my_packages %}
-                            <tr>
-                                <td>{{ package.PackageID }}</td>
-                                <td>
-                                    <form method="POST" action="{{ url_for('complete_package') }}">
-                                        <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
-                                        {% if session['courier_type'] == 'motorcyle %}
-                                            {% if package.status == 'picking up' %}  <!-- FUCK YOU REAZ -->
-                                            <input type="hidden" name="status" value="waiting">
-                                            {% elif package.status == 'delivering' %}
-                                            <input type="hidden" name="status" value="finished">
+                                <tr>
+                                    <td>{{ package.PackageID }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('complete_package') }}">
+                                            <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
+
+                                            <!-- for motorcyle -->
+                                            {% if session['courier_type'] == 'motorcyle' %}
+                                                {% if package.status == 'picking up' %}  
+                                                    <input type="hidden" name="status" value="stand by">
+                                                    <input type="hidden" name="pay" value= 80>
+                                                    <button class="btn btn-complete btn-sm">
+                                                        <i class="fas fa-check-circle">Deliver</i> 
+                                                    </button> 
+                                                {% elif package.status == 'delivering' %}
+                                                    <input type="hidden" name="status" value="finished">
+                                                    <button class="btn btn-complete btn-sm">
+                                                        <i class="fas fa-check-circle">Deliver</i> 
+                                                    </button> 
+                                                {% endif %}
+                                            {% else %}
+                                                    <!-- Long distance here-->
                                             {% endif %}
-                                        {% endif }
-                                    <button class="btn btn-complete btn-sm"">
-                                        <i class="fas fa-check-circle"></i> Deliver
-                                    </button>                                    
-                                </td>
-                            </tr>
+                                             
+                                        </form>                                  
+                                    </td>
+                                </tr>
                             {% endfor %}
                         </tbody>
                     </table>
