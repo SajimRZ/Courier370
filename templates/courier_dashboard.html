@@ -116,8 +116,8 @@
                         <tbody>
                             {% for package in packages %}
                                 <tr>
-                                    <!-- packaages for motorcyle: onfirmed and stand by-->
-                                    {% if session['courier_type'] == 'motorcyle' %} <!--CHANGE to 'motorcycle'-->
+                                    <!-- packaages for motorcycle: onfirmed and stand by-->
+                                    {% if session['courier_type'] == 'motorcycle' %} <!--CHANGE to 'motorcycle'-->
                                         
                                         <!--things shown when status is confirmed-->
                                         {% if package.status == 'confirmed' %} 
@@ -150,6 +150,23 @@
                                         {% endif %}
 
                                     <!--{# elif session is other vehicles #}-->
+                                    {% else %}
+                                        <!-- things shown when status is waiting-->
+                                        {% if package.status == 'waiting' %} 
+                                            <td>{{ package.PackageID }}</td>
+                                            <td>{{ package.Area }}, {{ package.City}}</td>
+                                            <td>{{ package. }}, {{ package.City}}</td>
+                                            <td>
+                                                <form method="POST" action="{{ url_for('transport_package') }}">
+                                                    <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
+                                                    <input type="hidden" name="status" value="transporting">
+                                                    <button class="btn btn-accept btn-sm">
+                                                        <i class="fas fa-check">Accept</i> <!-- ACCEPT BUTTON -->
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        {% endif %}
+
 
                                     {% endif %}
                                 </tr>
@@ -176,10 +193,14 @@
                                         <form method="POST" action="{{ url_for('complete_package') }}">
                                             <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
 
-                                            <!-- for motorcyle -->
-                                            {% if session['courier_type'] == 'motorcyle' %}
-                                                {% if package.status == 'picking up' %}  
-                                                    <input type="hidden" name="status" value="stand by">
+                                            <!-- for motorcycle -->
+                                            {% if session['courier_type'] == 'motorcycle' %}
+                                                {% if package.status == 'picking up' %} 
+                                                    {% if package.type == 'local' %} 
+                                                        <input type="hidden" name="status" value="stand by">
+                                                    {% elif package.type == 'intercity' %}
+                                                        <input type="hidden" name="status" value="waiting">
+                                                    {% endif %}
                                                     <input type="hidden" name="pay" value= 80>
                                                     <button class="btn btn-complete btn-sm">
                                                         <i class="fas fa-check-circle">Deliver</i> 
@@ -191,9 +212,17 @@
                                                     </button> 
                                                 {% endif %}
                                             {% else %}
-                                                    <!-- Long distance here-->
+                                                <!-- Long distance here-->
+                                                {% if session['courier_type'] == 'pickup truck' %}
+                                                    {% if package.status == 'transporting' %}
+                                                         <input type="hidden" name="status" value="stand by">
+                                                    {% endif %}
+                                                    <input type="hidden" name="pay" value= 160>
+                                                    <button class="btn btn-complete btn-sm">
+                                                        <i class="fas fa-check-circle">Deliver</i> 
+                                                    </button>
+                                                {% endif %}
                                             {% endif %}
-                                             
                                         </form>                                  
                                     </td>
                                 </tr>

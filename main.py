@@ -357,7 +357,8 @@ def courier_dashboard():
         ''', (session['user_id'],))
         courier = cursor.fetchone()
         
-        # Available packages
+        ## Available packages
+        ## Get the city of the courier
         cursor.execute('''
             SELECT UPPER(city) as city
             FROM courier
@@ -365,25 +366,27 @@ def courier_dashboard():
             ''', (session['user_id'],))
         c = cursor.fetchone()['city']
 
-        if courier['type'] == 'motorcyle':
+        if courier['type'] == 'motorcycle':
+            # packages for motorcycle
             cursor.execute('''
                 SELECT *
                 FROM package p, warehouse w 
-                WHERE p.WarehouseID = w.WarehouseID and (UPPER(p.S_city) = %s or UPPER(w.City) = %s) and and p.type = %s and p.status IN ('confirmed', 'stand by')
+                WHERE p.WarehouseID = w.WarehouseID and (UPPER(p.S_city) = %s or UPPER(w.City) = %s) and p.status IN ('confirmed', 'stand by')
                 ''', (c,'local',c,))
         else:
+            # packages for delivary van
             cursor.execute('''
                 SELECT *
-                FROM package p, warehouse w 
-                WHERE p.WarehouseID = w.WarehouseID and p.status IN ('waiting') and p.type = %s
-                ''', (c,'intercity',))
+                FROM package p, warehouse w, transfer t
+                WHERE p.WarehouseID = w.WarehouseID and and w.WarehouseID = t.FROM_WH and p.status = %s and p.type = %s
+                ''', ('waiting','intercity',))
         packages = cursor.fetchall()
         
         # My packages
         cursor.execute('''
             SELECT *
             FROM package p
-            WHERE CourierID = %s AND p.status IN ('picking up', 'delivering')
+            WHERE CourierID = %s
         ''', (session['user_id'],))
         my_packages = cursor.fetchall()
 
@@ -459,6 +462,37 @@ def complete_package():
         
         mysql.connection.commit()
         flash('Package marked as delivered!', 'success')
+    
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error completing package: {str(e)}', 'danger')
+    finally:
+        cursor.close()
+    
+    return redirect(url_for('courier_dashboard'))
+
+#Transport between warehouses
+@app.route('/transport_package', methods=['POST'])
+def transport_package():
+    if 'user_id' not in session:
+        flash('Not logged in', 'danger')
+        return redirect(url_for('login'))
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    PackageID = request.form['PackageID']
+    status = request.form['status']
+    
+    try:
+        # Verify package ownership
+        cursor.execute("""
+            UPDATE package 
+            SET status = %s
+            WHERE packageID = %s
+            """, ( status, PackageID))
+        
+        mysql.connection.commit()
+        flash('Package marked as transported!', 'success')
     
     except Exception as e:
         mysql.connection.rollback()
@@ -759,6 +793,33 @@ def confirm_package():
             SET status = 'confirmed' 
             WHERE PackageID = %s
         """, (package_id,))
+
+        #Transfer warehouse
+        if package_type == 'intercity':
+            cursor.execute("""
+                SELECT * from package
+                WHERE PackageID = %s
+            """, (package_id,))
+            pkg = cursor.fetchone()
+            
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (pkg['D_city'].upper(),))
+            warehouse = cursor.fetchone()
+            if not warehouse:
+                flash('No warehouse found in the destination city', 'error')
+                return redirect(url_for('customer_dashboard'))
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(Area) = %s and UPPER(City) = %s LIMIT 1', (pkg['D_street'].upper(),pkg['D_city'].upper(),))
+            wh_area = cursor.fetchone()
+            
+            if not wh_area:
+                wh_id = warehouse['WarehouseID']
+            elif wh_area['Area'] == pkg['D_street']:
+                wh_id = wh_area['WarehouseID']
+
+            cursor.execute("""
+                           INSERT INTO transfer (FROM_WH, TO_WH) vALUES (%s, %s)
+                           """, (pkg['WarehouseID'], wh_id))
+
+            
 
         #deduct taka
         cursor.execute("""
