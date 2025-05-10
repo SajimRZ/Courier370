@@ -583,7 +583,7 @@ def add_money():
             cursor.execute('UPDATE user SET wallet = %s WHERE UID = %s', (new_balance, session['user_id']))
             mysql.connection.commit()
 
-            #cursor.execute('INSERT INTO payment (acc_number, amount, method, UID) VALUES (%s, %s, %s, %s)', (acc_number, int(amount), payment_method, session['user_id']))
+            cursor.execute('INSERT INTO payment (acc_number, amount, method, UID,purpose) VALUES (%s, %s, %s, %s,%s)', (acc_number, int(amount), payment_method, session['user_id'], 'recharge'))
             mysql.connection.commit()
             flash('Money added successfully!', 'success')
         else:
@@ -629,16 +629,21 @@ def add_package():
         
         #get warehouse id for the package
         if package_scity == package_dcity:
-            package_type = 'Local'
+            package_type = 'local'
             cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_scity.upper(),))
             warehouse = cursor.fetchone()
             if not warehouse:
                 flash('No warehouse found in the destination city', 'error')
                 return redirect(url_for('customer_dashboard'))
-            wh_id = warehouse['WarehouseID']
+            cursor.execute('SELECT * FROM warehouse WHERE UPPER(Area) = %s UPPER(City) = %s LIMIT 1', (package_droad.upper(),package_scity.upper(),))
+            wh_area = cursor.fetchone()
+            if wh_area['Area'] == package_droad:
+                wh_id = wh_area['WarehouseID']
+            if not wh_area:
+                wh_id = warehouse['WarehouseID']
 
         else:
-            package_type = 'Intercity'
+            package_type = 'intercity'
             cursor.execute('SELECT * FROM warehouse WHERE UPPER(City) = %s LIMIT 1', (package_dcity.upper(),))
             warehouse = cursor.fetchone()
             if not warehouse:
