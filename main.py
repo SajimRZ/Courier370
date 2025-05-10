@@ -358,7 +358,7 @@ def courier_dashboard():
         
         # Available packages
         cursor.execute('''
-            SELECT city
+            SELECT UPPER(city) as city
             FROM courier
             WHERE UID = %s
             ''', (session['user_id'],))
@@ -368,14 +368,14 @@ def courier_dashboard():
             cursor.execute('''
                 SELECT *
                 FROM package p, warehouse w 
-                WHERE p.WarehouseID = w.WarehouseID and (p.S_city = %s or w.City = %s) and p.status IN ('confirmed', 'stand by')
-                ''', (c,c,))
+                WHERE p.WarehouseID = w.WarehouseID and (UPPER(p.S_city) = %s or UPPER(w.City) = %s) and and p.type = %s and p.status IN ('confirmed', 'stand by')
+                ''', (c,'local',c,))
         else:
             cursor.execute('''
                 SELECT *
                 FROM package p, warehouse w 
-                WHERE p.WarehouseID = w.WarehouseID and p.status IN ('waiting')
-                ''', (c,))
+                WHERE p.WarehouseID = w.WarehouseID and p.status IN ('waiting') and p.type = %s
+                ''', (c,'intercity',))
         packages = cursor.fetchall()
         
         # My packages
