@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 09, 2025 at 12:19 PM
+-- Generation Time: May 11, 2025 at 01:48 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -54,7 +54,7 @@ CREATE TABLE `courier` (
   `name` varchar(30) NOT NULL,
   `city` varchar(20) NOT NULL,
   `licenseNo` varchar(10) NOT NULL,
-  `type` varchar(10) NOT NULL
+  `type` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -63,7 +63,9 @@ CREATE TABLE `courier` (
 
 INSERT INTO `courier` (`UID`, `name`, `city`, `licenseNo`, `type`) VALUES
 (1003, 'aa', 'bbbb', 'aa', 'motorcyle'),
-(1004, 'courier', 'Uttara', '164235', 'motorcyle');
+(1004, 'courier', 'Dhaka', '164235', 'motorcycle'),
+(1006, 'cat', 'Khulna', '123', 'motorcycle'),
+(1007, 'dog', 'Dhaka', '1234', 'pickup truck');
 
 -- --------------------------------------------------------
 
@@ -83,7 +85,7 @@ CREATE TABLE `customer` (
 --
 
 INSERT INTO `customer` (`UID`, `houseNo`, `road`, `city`) VALUES
-(1001, '5/2', 'Mirpur', 'Dhaka'),
+(1001, '5/2', 'Monipur', 'Dhaka'),
 (1002, 'ss', 'ss', 'ss'),
 (1005, '15', 'Uttara', '9');
 
@@ -113,7 +115,7 @@ CREATE TABLE `package` (
 --
 
 INSERT INTO `package` (`PackageID`, `S_houseNo`, `S_street`, `S_city`, `D_houseNo`, `D_street`, `D_city`, `type`, `status`, `WarehouseID`, `CourierID`, `CustomerID`) VALUES
-('abcd', '1', '2', 'Uttara', '3', '4', 'Uttara', 'sss', '', '1', 0, 0);
+('9', '5/2', 'Monipur', 'Dhaka', '66', 'Uttara', 'Dhaka', 'local', 'unconfirmed', '1', -1, 1001);
 
 -- --------------------------------------------------------
 
@@ -126,17 +128,17 @@ CREATE TABLE `payment` (
   `amount` int(20) NOT NULL,
   `method` varchar(20) NOT NULL,
   `UID` int(10) NOT NULL,
-  `purpose` varchar(20) NOT NULL
+  `purpose` varchar(20) NOT NULL,
+  `PaymentID` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `payment`
 --
 
-INSERT INTO `payment` (`acc_number`, `amount`, `method`, `UID`, `purpose`) VALUES
-('112', 1, 'debit_card', 1001, ''),
-('222-333', 15, 'debit_card', 1001, ''),
-('222-333', 10, 'net_banking', 1001, '');
+INSERT INTO `payment` (`acc_number`, `amount`, `method`, `UID`, `purpose`, `PaymentID`) VALUES
+('222333', 160, 'credit_card', 1001, 'payment', 0),
+('11', 160, 'credit_card', 1001, 'payment', 1);
 
 -- --------------------------------------------------------
 
@@ -182,11 +184,13 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`UID`, `email`, `name`, `password`, `phone`, `AdminID`, `wallet`) VALUES
-(1001, 'reaz@gmail.com', 'Reaz', 'reaz123', 1842308890, 1, 310),
+(1001, 'reaz@gmail.com', 'Reaz', 'reaz123', 1842308890, 1, 999369),
 (1002, 'sss@sss', 'sss', 'ss', 2147483647, 4, 0),
 (1003, 'aa@aa', 'aaaaa', 'aa', 22, 1, 0),
-(1004, 'courier@gmail.com', 'courier', '1234', 1234567890, 2, 0),
-(1005, 'idur@gmail.com', 'Idur', '1234', 1234567890, 4, 0);
+(1004, 'courier@gmail.com', 'cour', '1234', 1234567890, 2, 320),
+(1005, 'idur@gmail.com', 'Idur', '1234', 1234567890, 4, 0),
+(1006, 'cat@gmail.com', 'cat', 'cat', 2147483647, 1, 160),
+(1007, 'dog@gmail.com', 'dog', 'dog', 1111111111, 2, 320);
 
 -- --------------------------------------------------------
 
