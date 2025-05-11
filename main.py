@@ -297,20 +297,22 @@ def delete_admin(AdminID):
 def warehouse_details():
     if request.method == 'POST':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        WarehouseID = request.form['WarehouseID']
-        cursor.execute('''
-                    SELECT *
-                    FROM warehouse w, package p
-                    WHERE w.WarehouseID = p.WarehouseID and w.WarehouseID = %s\
-                       ''', (WarehouseID),)
+        try:
+            WarehouseID = request.form['WarehouseID']
+            cursor.execute('''
+                        SELECT *
+                        FROM warehouse w, package p
+                        WHERE w.WarehouseID = p.WarehouseID and w.WarehouseID = %s\
+                        ''', (WarehouseID),)
+            
+            Details = cursor.fetchall()
+            if not Details:
+                flash('Warehouse Empty', 'warning')
+                cursor.close()
+                return redirect(url_for('admin_dashboard'))
+        finally:
         
-        Details = cursor.fetchall()
-        if not Details:
-            flash('Warehouse Empty', 'message')
             cursor.close()
-            return redirect(url_for('admin_dashboard'))
-        
-        cursor.close()
 
         return render_template('warehouse_details.html', Details = Details)
 
@@ -865,20 +867,26 @@ def confirm_package():
             
 
         #deduct taka
-        cursor.execute("""
-        UPDATE user
-        SET wallet = wallet - %s
-        WHERE UID = %s
-        """, (package_price, session['user_id']))
-        cursor.execute('SELECT max(PaymentID) as count FROM payment')
-        next_id = cursor.fetchone()['count']
-        if next_id == None:
-            next_id = 1
+        cursor.execute('select wallet from user where UIS = %s', (session['user_id']))
+        amount = int(cursor.fetchone()['wallet'])
+        if amount >= 80:
+            cursor.execute("""
+            UPDATE user
+            SET wallet = wallet - %s
+            WHERE UID = %s
+            """, (package_price, session['user_id']))
+            cursor.execute('SELECT max(PaymentID) as count FROM payment')
+            next_id = cursor.fetchone()['count']
+            if next_id == None:
+                next_id = 1
+            else:
+                next_id = int(next_id)+1
+            cursor.execute('''
+                INSERT INTO payment (acc_number,amount,method,UID,purpose,PaymentID) VALUES (%s, %s, %s, %s, %s, %s)
+                ''', (account_number, package_price, payment_method, session['user_id'], 'payment',next_id))
         else:
-            next_id = int(next_id)+1
-        cursor.execute('''
-            INSERT INTO payment (acc_number,amount,method,UID,purpose,PaymentID) VALUES (%s, %s, %s, %s, %s, %s)
-            ''', (account_number, package_price, payment_method, session['user_id'], 'payment',next_id))
+            flash('Not enough money in wallet', 'error')
+            return redirect(url_for('customer_dashboard'))
         
         mysql.connection.commit()
         flash('Package confirmed successfully!', 'success')
