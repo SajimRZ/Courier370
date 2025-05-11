@@ -47,10 +47,10 @@ def login():
 
             cursor.execute('SELECT * FROM user u,courier c WHERE u.UID = c.UID AND u.email = %s AND u.password = %s', (email, password))
             courier_check = cursor.fetchone()
-            print(courier_check)
             if courier_check == None:
                 return redirect(url_for('customer_dashboard'))
             else:
+                print(courier_check)
                 session["courier_type"] = courier_check["type"]
                 return redirect(url_for('courier_dashboard'))
                 
@@ -375,9 +375,11 @@ def courier_dashboard():
         else:
             # packages for delivary van
             cursor.execute('''
-                SELECT *
+                SELECT 
+                           p.PackageID, p.S_houseNo, p.S_street, p.S_city, p.D_houseNo, p.D_street, p.D_city, p.type, p.status,
+                            w.Area as from_area, w.City as from_city, w2.Area as to_area, w2.City as to_city, t.From_WH, t.To_WH
                 FROM package p, warehouse w, transfer t, warehouse w2
-                WHERE p.WarehouseID = w.WarehouseID and and w.WarehouseID = t.From_WH and t.To_WH = w2.WarehouseID and
+                WHERE p.WarehouseID = w.WarehouseID and w.WarehouseID = t.From_WH and t.To_WH = w2.WarehouseID and
                 p.status = %s and p.type = %s
                 ''', ('waiting','intercity',))
         packages = cursor.fetchall()
@@ -455,7 +457,24 @@ def complete_package():
             UPDATE user
             SET wallet = wallet + %s
             WHERE UID = %s
-            """, (pay,session['user_id'],))
+            """, (pay, session['user_id'],))
+
+        if session['courier_type'] == 'pickup truck':
+            cursor.execute('''
+                           select * from package p, warehouse w, transfer t, warehouse w2 where
+                            p.WarehouseID = w.WarehouseID and w.WarehouseID = t.From_WH and t.To_WH = w2.WarehouseID and
+                            p.PackageID = %s
+                           ''', (PackageID,))
+            pkg = cursor.fetchone()
+            cursor.execute('''
+                           update package set WarehouseID = %s where PackageID = %s
+                           ''', (pkg['To_WH'],PackageID))
+
+            cursor.execute('''
+                            DELETE FROM transfer WHERE FROM_WH = %s and TO_WH = %s
+                            ''', (pkg['From_WH'],pkg['To_WH']))
+            
+
         
         mysql.connection.commit()
         flash('Package marked as delivered!', 'success')
@@ -469,35 +488,7 @@ def complete_package():
     return redirect(url_for('courier_dashboard'))
 
 #Transport between warehouses
-@app.route('/transport_package', methods=['POST'])
-def transport_package():
-    if 'user_id' not in session:
-        flash('Not logged in', 'danger')
-        return redirect(url_for('login'))
-    
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    PackageID = request.form['PackageID']
-    status = request.form['status']
-    
-    try:
-        # Verify package ownership
-        cursor.execute("""
-            UPDATE package 
-            SET status = %s
-            WHERE packageID = %s
-            """, ( status, PackageID))
-        
-        mysql.connection.commit()
-        flash('Package marked as transported!', 'success')
-    
-    except Exception as e:
-        mysql.connection.rollback()
-        flash(f'Error completing package: {str(e)}', 'danger')
-    finally:
-        cursor.close()
-    
-    return redirect(url_for('courier_dashboard'))
 
 
 ##Update user profile
@@ -831,7 +822,7 @@ def confirm_package():
         else:
             next_id = int(next_id)+1
         cursor.execute('''
-            INSERT INTO payment (acc_number,amount,method,UID,purpose,PaymentID) VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO payment (acc_number,amount,method,UID,purpose,PaymentID) VALUES (%s, %s, %s, %s, %s, %s)
             ''', (account_number, package_price, payment_method, session['user_id'], 'payment',next_id))
         
         mysql.connection.commit()

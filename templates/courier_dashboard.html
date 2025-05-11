@@ -154,10 +154,10 @@
                                         <!-- things shown when status is waiting-->
                                         {% if package.status == 'waiting' %} 
                                             <td>{{ package.PackageID }}</td>
-                                            <td>{{ package.Area }}, {{ package.City}}</td>
-                                            <td>{{ package.w2.Area }}, {{ package.w2.City}}</td>
+                                            <td>{{ package.from_area }}, {{ package.from_city}}</td>
+                                            <td>{{ package.to_area }}, {{ package.to_city }}</td>
                                             <td>
-                                                <form method="POST" action="{{ url_for('transport_package') }}">
+                                                <form method="POST" action="{{ url_for('accept_package') }}">
                                                     <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
                                                     <input type="hidden" name="status" value="transporting">
                                                     <button class="btn btn-accept btn-sm">
@@ -188,9 +188,9 @@
                         <tbody>
                             {% for package in my_packages %}
                                 <tr>
-                                    {% if session['courier_type'] == 'motorcycle'  and package.type == ('picking up' or 'delivering') %}
+                                    {% if session['courier_type'] == 'motorcycle'  and (package.status == 'picking up' or package.status =='delivering') %}
                                         <td>{{ package.PackageID }}</td>
-                                    {% elif session['courier_type'] == 'pickup truck' and package.type == ('transporting') %}
+                                    {% elif session['courier_type'] == 'pickup truck' and package.status == 'transporting' %}
                                         <td>{{ package.PackageID }}</td>
                                     {% endif %}
                                     <td>
@@ -211,6 +211,7 @@
                                                     </button> 
                                                 {% elif package.status == 'delivering' %}
                                                     <input type="hidden" name="status" value="finished">
+                                                    <input type="hidden" name="pay" value= 80>
                                                     <button class="btn btn-complete btn-sm">
                                                         <i class="fas fa-check-circle">Deliver</i> 
                                                     </button> 
@@ -219,12 +220,13 @@
                                                 <!-- Long distance here-->
                                                 {% if session['courier_type'] == 'pickup truck' %}
                                                     {% if package.status == 'transporting' %}
-                                                         <input type="hidden" name="status" value="stand by">
+                                                        <input type="hidden" name="status" value="stand by">
+                                                        <input type="hidden" name="pay" value= 160>
+                                                        <button class="btn btn-complete btn-sm">
+                                                            <i class="fas fa-check-circle">Deliver</i> 
+                                                        </button>
                                                     {% endif %}
-                                                    <input type="hidden" name="pay" value= 160>
-                                                    <button class="btn btn-complete btn-sm">
-                                                        <i class="fas fa-check-circle">Deliver</i> 
-                                                    </button>
+                                                    
                                                 {% endif %}
                                             {% endif %}
                                         </form>                                  
