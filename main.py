@@ -229,6 +229,27 @@ def admin_dashboard():
     cursor.close()
     return render_template('admin_dashboard.html', users=users, admins=admins, wh = wh)
 
+##Customer payment history - admin dashboard
+@app.route('/admin_dashboard/payment_history', methods=['POST'])
+def payment_history():
+    if 'user_id' not in session or not session.get('is_admin'):
+        return redirect(url_for('login'))
+    
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    cursor.execute('''
+                    SELECT * FROM payment p, user u
+                    WHERE p.UID = u.UID and p.UID = %s
+                    ORDER BY p.PaymentID asc
+                   ''', (request.form['UID'],))
+    transactions = cursor.fetchall()
+    if not transactions:
+        flash('No payment history found for this user', 'warning')
+        cursor.close()
+        return redirect(url_for('admin_dashboard'))
+    cursor.close()
+    return render_template('payment_history.html', transactions= transactions )
+
 ## Go to the Admin edit page
 @app.route('/admin_dashboard/add_admin')
 def add_admin():
@@ -352,23 +373,34 @@ def customer_dashboard():
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
+    #get customer data
     cursor.execute('SELECT * FROM user u, customer c where u.UID = c.UID and c.UID = %s',(session['user_id'],))
     customer = cursor.fetchone()  
-
+    #get all packages
     cursor.execute('''
                     SELECT * FROM package 
                     WHERE customerID = %s and status != 'finished'
                    ''', (session['user_id'],))
     unconfirmed_orders = cursor.fetchall()
-
+    #only finished packages
     cursor.execute('''
                     SELECT * FROM package 
                     WHERE customerID = %s and status = 'finished'
                    ''', (session['user_id'],))
     finished_orders = cursor.fetchall()
+
+    cursor.execute('''
+                    select * from payment p, user u where
+                    p.UID = u.UID and p.UID = %s order by p.PaymentID desc
+                ''', (session['user_id'],))
+    transactions = cursor.fetchall()
     
     cursor.close()
-    return render_template('customer_dashboard.html', customer = customer, unconfirmed_orders = unconfirmed_orders, finished_orders = finished_orders)
+    return render_template('customer_dashboard.html', 
+                           customer = customer, 
+                           unconfirmed_orders = unconfirmed_orders, 
+                           finished_orders = finished_orders,
+                           transactions = transactions)
 
 #remove package
 @app.route('/remove_package', methods=['POST'])
@@ -902,8 +934,8 @@ def confirm_package():
             
 
         #deduct taka
-        cursor.execute('select wallet from user where UIS = %s', (session['user_id']))
-        amount = int(cursor.fetchone()['wallet'])
+        cursor.execute('select wallet from user where UID = %s', (session['user_id'],))
+        amount = cursor.fetchone()['wallet']
         if amount >= 80:
             cursor.execute("""
             UPDATE user
@@ -926,9 +958,7 @@ def confirm_package():
         mysql.connection.commit()
         flash('Package confirmed successfully!', 'success')
     
-    except Exception as e:
-        mysql.connection.rollback()
-        flash(f'Error confirming package: {str(e)}', 'danger')
+    
    
     finally:
         cursor.close()

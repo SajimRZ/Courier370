@@ -71,6 +71,7 @@
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Phone</th>
+                                <th>Payment History</th>
                                 <th>Admin ID</th>
                             </tr>
                         </thead>
@@ -81,6 +82,12 @@
                                 <td>{{ user.name }}</td>
                                 <td>{{ user.email }}</td>
                                 <td>{{ user.phone }}</td>
+                                <td>
+                                    <form action="{{ url_for('payment_history') }}" method="post">
+                                        <input type="hidden" name="UID" value="{{ user.UID }}">
+                                        <button type="submit" class="btn btn-secondary">History</button>
+                                    </form>
+                                </td>
                                 <td>{{ user.AdminID }}</td>
                             </tr>
                             {% endfor %}

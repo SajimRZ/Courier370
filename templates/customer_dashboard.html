@@ -71,7 +71,40 @@
                         </button>
                     </card>
                 </div>
+                <!-- payment history -->
+                <div class="profile-card mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title">Payment History</h5>
+                        </div>  
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Account Number</th>
+                                        <th>Purpose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in transactions %}
+                                        <tr>
+                                            <td>Tk.{{ transaction.amount }}</td>
+                                            <td>{{ transaction.method }}</td>
+                                            <td>{{ transaction.acc_number }}</td>
+                                            <td>{{ transaction.purpose }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
+            
+            <!-- wallet and package -->
             <div class="col-md-6">
                 <div class="row-md-12">
                     <div class="col-md-12">
