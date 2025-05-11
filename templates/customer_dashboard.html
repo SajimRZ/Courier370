@@ -201,7 +201,7 @@
                     <div class="col-md-12">
                         <div class="card mt-4">
                             <div class="card-header">
-                                <h5 class="card-title">Delivered Packages</h5>
+                                <h5 class="card-title">Delivery Finished</h5>
                             </div>
                             <div class="card-body">
                                 <table class="table table-striped">
@@ -214,7 +214,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for i in delivered_orders %}
+                                        {% for i in finished_orders %}
                                             <tr>
                                                 <td>{{ i.PackageID }}</td>
                                                 <td>{{ i.D_houseNo }}, {{ i.D_street }}, {{ i.D_city }}</td>

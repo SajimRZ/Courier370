@@ -356,19 +356,19 @@ def customer_dashboard():
     customer = cursor.fetchone()  
 
     cursor.execute('''
-                    SELECT * FROM package p
-                    WHERE p.PackageID and p.customerID = %s and p.status != 'finished'
+                    SELECT * FROM package 
+                    WHERE customerID = %s and status != 'finished'
                    ''', (session['user_id'],))
     unconfirmed_orders = cursor.fetchall()
 
     cursor.execute('''
-                   SELECT * FROM package p
-                    WHERE p.PackageID and p.customerID = %s and p.status = 'finished'
+                    SELECT * FROM package 
+                    WHERE customerID = %s and status = 'finished'
                    ''', (session['user_id'],))
     finished_orders = cursor.fetchall()
     
     cursor.close()
-    return render_template('customer_dashboard.html', customer = customer, unconfirmed_orders = unconfirmed_orders,finished_orders = finished_orders)
+    return render_template('customer_dashboard.html', customer = customer, unconfirmed_orders = unconfirmed_orders, finished_orders = finished_orders)
 
 #remove package
 @app.route('/remove_package', methods=['POST'])
@@ -391,13 +391,14 @@ def remove_package():
         cursor.execute('DELETE FROM package WHERE PackageID = %s', (package_id,))
         mysql.connection.commit()
         flash('Package removed successfully!', 'success')
-    
+        
     except Exception as e:
         mysql.connection.rollback()
         flash(f'Error removing package: {str(e)}', 'danger')
     
     finally:
         cursor.close()
+    return redirect(url_for('customer_dashboard'))
 
 
 ## Courier Dashboard
