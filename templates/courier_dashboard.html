@@ -155,7 +155,7 @@
                                         {% if package.status == 'waiting' %} 
                                             <td>{{ package.PackageID }}</td>
                                             <td>{{ package.Area }}, {{ package.City}}</td>
-                                            <td>{{ package. }}, {{ package.City}}</td>
+                                            <td>{{ package.w2.Area }}, {{ package.w2.City}}</td>
                                             <td>
                                                 <form method="POST" action="{{ url_for('transport_package') }}">
                                                     <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
@@ -188,7 +188,11 @@
                         <tbody>
                             {% for package in my_packages %}
                                 <tr>
-                                    <td>{{ package.PackageID }}</td>
+                                    {% if session['courier_type'] == 'motorcycle'  and package.type == ('picking up' or 'delivering') %}
+                                        <td>{{ package.PackageID }}</td>
+                                    {% elif session['courier_type'] == 'pickup truck' and package.type == ('transporting') %}
+                                        <td>{{ package.PackageID }}</td>
+                                    {% endif %}
                                     <td>
                                         <form method="POST" action="{{ url_for('complete_package') }}">
                                             <input type="hidden" name="PackageID" value="{{ package.PackageID }}">
