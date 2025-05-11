@@ -220,14 +220,18 @@ def admin_dashboard():
     # Get all admins
     cursor.execute('SELECT * FROM admin')
     admins = cursor.fetchall()
-
+    # Get all warehouses
     cursor.execute('SELECT * FROM warehouse')
     wh = cursor.fetchall()
 
+    # Get all customers
+    cursor.execute('SELECT * FROM customer')
+    customers = cursor.fetchall()
+    print(customers)
 
     
     cursor.close()
-    return render_template('admin_dashboard.html', users=users, admins=admins, wh = wh)
+    return render_template('admin_dashboard.html', users=users, admins=admins, wh = wh, customers = customers)
 
 ##Customer payment history - admin dashboard
 @app.route('/admin_dashboard/payment_history', methods=['POST'])

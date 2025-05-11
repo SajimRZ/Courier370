@@ -83,10 +83,13 @@
                                 <td>{{ user.email }}</td>
                                 <td>{{ user.phone }}</td>
                                 <td>
-                                    <form action="{{ url_for('payment_history') }}" method="post">
-                                        <input type="hidden" name="UID" value="{{ user.UID }}">
-                                        <button type="submit" class="btn btn-secondary">History</button>
-                                    </form>
+                                    {% set user_exists = customers|selectattr('UID', 'equalto', user.UID)|list %}
+                                    {% if user_exists %}
+                                        <form action="{{ url_for('payment_history') }}" method="post">
+                                            <input type="hidden" name="UID" value="{{ user.UID }}">
+                                            <button type="submit" class="btn btn-secondary">History</button>
+                                        </form>
+                                    {% endif %}
                                 </td>
                                 <td>{{ user.AdminID }}</td>
                             </tr>
