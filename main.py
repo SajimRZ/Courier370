@@ -223,6 +223,8 @@ def admin_dashboard():
 
     cursor.execute('SELECT * FROM warehouse')
     wh = cursor.fetchall()
+
+
     
     cursor.close()
     return render_template('admin_dashboard.html', users=users, admins=admins, wh = wh)
@@ -290,6 +292,28 @@ def delete_admin(AdminID):
         flash("Admin deleted successfully!", "success")
         return redirect(url_for('add_admin'))
 
+##Show Warehouse Details
+@app.route('/warehouse_details', methods=['POST'])
+def warehouse_details():
+    if request.method == 'POST':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        WarehouseID = request.form['WarehouseID']
+        cursor.execute('''
+                    SELECT *
+                    FROM warehouse w, package p
+                    WHERE w.WarehouseID = p.WarehouseID and w.WarehouseID = %s\
+                       ''', (WarehouseID),)
+        
+        Details = cursor.fetchall()
+        if not Details:
+            flash('Warehouse Empty', 'message')
+            cursor.close()
+            return redirect(url_for('admin_dashboard'))
+        
+        cursor.close()
+
+        return render_template('warehouse_details.html', Details = Details)
+
 ##Create Warehouse
 @app.route('/admin_dashboard/createwh', methods=['POST'])
 def create_warehouse():  
@@ -331,9 +355,9 @@ def customer_dashboard():
     customer = cursor.fetchone()  
 
     cursor.execute('''
-        SELECT * FROM package p
-        WHERE p.PackageID and p.customerID = %s
-    ''', (session['user_id'],))
+                    SELECT * FROM package p
+                    WHERE p.PackageID and p.customerID = %s
+                   ''', (session['user_id'],))
     unconfirmed_orders = cursor.fetchall()
     
     cursor.close()
@@ -350,44 +374,46 @@ def courier_dashboard():
     try:
         # Get courier info
         cursor.execute('''
-            SELECT u.*, c.* 
-            FROM user u
-            JOIN courier c ON u.UID = c.UID 
-            WHERE u.UID = %s
-        ''', (session['user_id'],))
+                        SELECT u.*, c.* 
+                        FROM user u
+                        JOIN courier c ON u.UID = c.UID 
+                        WHERE u.UID = %s
+                       ''', (session['user_id'],))
         courier = cursor.fetchone()
         
         ## Available packages
         ## Get the city of the courier
         cursor.execute('''
-            SELECT UPPER(city) as city
-            FROM courier
-            WHERE UID = %s
-            ''', (session['user_id'],))
+                        SELECT UPPER(city) as city
+                        FROM courier
+                        WHERE UID = %s
+                       ''', (session['user_id'],))
         c = cursor.fetchone()['city']
 
         if courier['type'] == 'motorcycle':
             # packages for motorcycle
             cursor.execute('''
-                SELECT *
-                FROM package p, warehouse w 
-                WHERE p.WarehouseID = w.WarehouseID and (UPPER(p.S_city) = %s or UPPER(w.City) = %s) and p.status IN ('confirmed', 'stand by')
-                ''', (c,'local',c,))
+                            SELECT *
+                            FROM package p, warehouse w 
+                            WHERE p.WarehouseID = w.WarehouseID and 
+                            (UPPER(p.S_city) = %s or UPPER(w.City) = %s) and 
+                            p.status IN ('confirmed', 'stand by')
+                           ''', (c,'local',c,))
         else:
             # packages for delivary van
             cursor.execute('''
-                SELECT *
-                FROM package p, warehouse w, transfer t
-                WHERE p.WarehouseID = w.WarehouseID and and w.WarehouseID = t.FROM_WH and p.status = %s and p.type = %s
-                ''', ('waiting','intercity',))
+                            SELECT *
+                            FROM package p, warehouse w, transfer t
+                            WHERE p.WarehouseID = w.WarehouseID and and w.WarehouseID = t.FROM_WH and p.status = %s and p.type = %s=
+                           ''', ('waiting','intercity',))
         packages = cursor.fetchall()
         
         # My packages
         cursor.execute('''
-            SELECT *
-            FROM package p
-            WHERE CourierID = %s
-        ''', (session['user_id'],))
+                        SELECT *
+                        FROM package p
+                        WHERE CourierID = %s
+                       ''', (session['user_id'],))
         my_packages = cursor.fetchall()
 
         return render_template('courier_dashboard.html', 
@@ -418,10 +444,10 @@ def accept_package():
 
     try:
         cursor.execute("""
-            UPDATE package 
-            SET status = %s , CourierID = %s
-            WHERE packageID = %s
-        """, ( status, session['user_id'], PackageID ))
+                        UPDATE package 
+                        SET status = %s , CourierID = %s
+                        WHERE packageID = %s
+                       """, ( status, session['user_id'], PackageID ))
         
         mysql.connection.commit()
         flash('Package accepted successfully! It will remain available until delivery is confirmed.', 'success')
@@ -450,15 +476,15 @@ def complete_package():
     try:
         # Verify package ownership
         cursor.execute("""
-            UPDATE package 
-            SET status = %s
-            WHERE packageID = %s
-            """, ( status, PackageID))
+                        UPDATE package 
+                        SET status = %s
+                        WHERE packageID = %s
+                       """, ( status, PackageID))
         cursor.execute("""
-            UPDATE user
-            SET wallet = wallet + %s
-            WHERE UID = %s
-            """, (pay,session['user_id'],))
+                        UPDATE user
+                        SET wallet = wallet + %s
+                        WHERE UID = %s
+                       """, (pay,session['user_id'],))
         
         mysql.connection.commit()
         flash('Package marked as delivered!', 'success')
@@ -486,10 +512,10 @@ def transport_package():
     try:
         # Verify package ownership
         cursor.execute("""
-            UPDATE package 
-            SET status = %s
-            WHERE packageID = %s
-            """, ( status, PackageID))
+                        UPDATE package 
+                        SET status = %s
+                        WHERE packageID = %s
+                       """, ( status, PackageID))
         
         mysql.connection.commit()
         flash('Package marked as transported!', 'success')
@@ -515,11 +541,11 @@ def update_profile():
         
         # Update user table
         cursor.execute('''
-            UPDATE user SET 
-            name = %s, 
-            email = %s 
-            WHERE UID = %s
-        ''', (
+                        UPDATE user SET 
+                        name = %s, 
+                        email = %s 
+                        WHERE UID = %s
+                       ''', (
             request.form['name'],
             request.form['email'],
             session['user_id']
@@ -527,12 +553,12 @@ def update_profile():
         
         # Update customer table
         cursor.execute('''
-            UPDATE customer SET
-            houseNo = %s,
-            road = %s,
-            city = %s
-            WHERE UID = %s
-        ''', (
+                        UPDATE customer SET
+                        houseNo = %s,
+                        road = %s,
+                        city = %s
+                        WHERE UID = %s
+                       ''', (
             request.form['houseNo'],
             request.form['road'],
             request.form['city'],
@@ -563,20 +589,20 @@ def update_profile_courier():
         
         # Update user table
         cursor.execute('''
-            UPDATE user SET 
-            name = %s
-            WHERE UID = %s
-        ''', (
+                        UPDATE user SET 
+                        name = %s
+                        WHERE UID = %s
+                       ''', (
             request.form['name'],
             session['user_id']
         ))
         
         # Update courier table
         cursor.execute('''
-            UPDATE courier SET
-            city = %s
-            WHERE UID = %s
-        ''', (
+                        UPDATE courier SET
+                        city = %s
+                        WHERE UID = %s
+                       ''', (
             request.form['city'],
             session['user_id']
         ))
