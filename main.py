@@ -816,56 +816,6 @@ def add_package():
     return redirect(url_for('customer_dashboard'))
 
 
-## Dummy Value Generator (Remove later)
-@app.route('/create_dummy_data', methods=['POST'])
-def create_dummy_data():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    try:
-        # Create dummy admin
-        cursor.execute('INSERT INTO admin (AdminID, name, email, password) VALUES (999, "Dummy Admin", "dummy@admin.com", "dummy123")')
-        
-        # Create dummy user/customer
-        cursor.execute('INSERT INTO user (UID, email, name, password, phone, AdminID, wallet) VALUES (9999, "dummy@user.com", "Dummy User", "dummy123", 1234567890, 999, 100)')
-        cursor.execute('INSERT INTO customer (UID, houseNo, road, city) VALUES (9999, "123", "Main St", "Dummy City")')
-        
-        # Create dummy courier
-        cursor.execute('INSERT INTO user (UID, email, name, password, phone, AdminID, wallet) VALUES (9998, "courier@dummy.com", "Dummy Courier", "dummy123", 987654321, 999, 0)')
-        cursor.execute('INSERT INTO courier (UID, name, city, licenseNo, type) VALUES (9998, "Dummy Courier", "Dummy City", "DUMMY123", "motorcycle")')
-        
-        # Create dummy warehouse
-        cursor.execute('INSERT INTO warehouse (WarehouseID, Area, City, AdminID) VALUES ("999", "Dummy Area", "Dummy City", 999)')
-        
-        mysql.connection.commit()
-        flash('Dummy data created successfully!', 'success')
-    except Exception as e:
-        mysql.connection.rollback()
-        flash(f'Error creating dummy data: {str(e)}', 'danger')
-    finally:
-        cursor.close()
-    return redirect(url_for('login'))
-
-## Dummy Value Delete (Remove Later)
-@app.route('/clear_dummy_data', methods=['POST'])
-def clear_dummy_data():
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    try:
-        # Delete dummy data in reverse order to maintain referential integrity
-        cursor.execute('DELETE FROM courier WHERE UID IN (9998)')
-        cursor.execute('DELETE FROM customer WHERE UID IN (9999)')
-        cursor.execute('DELETE FROM user WHERE UID IN (9998, 9999)')
-        cursor.execute('DELETE FROM warehouse WHERE WarehouseID = "999"')
-        cursor.execute('DELETE FROM admin WHERE AdminID = 999')
-        
-        mysql.connection.commit()
-        flash('Dummy data cleared successfully!', 'success')
-    except Exception as e:
-        mysql.connection.rollback()
-        flash(f'Error clearing dummy data: {str(e)}', 'danger')
-    finally:
-        cursor.close()
-    return redirect(url_for('login'))    
-
-
 #Confirm Package acter creating
 @app.route('/confirm_package', methods=['POST'])
 def confirm_package():
