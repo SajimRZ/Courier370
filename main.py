@@ -346,8 +346,7 @@ def create_warehouse():
 ## Customer Dashboard
 @app.route('/customer_dashboard', methods = ['GET', 'POST'])
 def customer_dashboard():
-    if 'user_id' not in session or not session.get('is_admin'):
-        return redirect(url_for('login'))
+    
     
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
@@ -398,15 +397,18 @@ def courier_dashboard():
                             WHERE p.WarehouseID = w.WarehouseID and 
                             (UPPER(p.S_city) = %s or UPPER(w.City) = %s) and 
                             p.status IN ('confirmed', 'stand by')
-                           ''', (c,'local',c,))
+                           ''', (c,c,))
         else:
             # packages for delivary van
             cursor.execute('''
-                            SELECT *
-                            FROM package p, warehouse w, transfer t
-                            WHERE p.WarehouseID = w.WarehouseID and and w.WarehouseID = t.FROM_WH and p.status = %s and p.type = %s=
-                           ''', ('waiting','intercity',))
+                SELECT *
+                FROM package p, warehouse w, transfer t, warehouse w2
+                WHERE p.WarehouseID = w.WarehouseID and and w.WarehouseID = t.From_WH and t.To_WH = w2.WarehouseID and
+                p.status = %s and p.type = %s
+                ''', ('waiting','intercity',))
+                            
         packages = cursor.fetchall()
+        print(packages)
         
         # My packages
         cursor.execute('''
@@ -422,11 +424,7 @@ def courier_dashboard():
                             my_packages=my_packages
                             )
     
-    except Exception as e: 
-        mysql.connection.rollback()
-        flash(f'Error fetching data: {str(e)}', 'danger')
-        print(e)
-        return redirect(url_for('login'))
+    
     finally:
         cursor.close()
 
@@ -712,7 +710,7 @@ def add_package():
             
             if not wh_area:
                 wh_id = warehouse['WarehouseID']
-            elif wh_area['Area'] == package_droad:
+            elif wh_area['Area'] == package_sroad:
                 wh_id = wh_area['WarehouseID']
 
         #Make the package
@@ -813,7 +811,7 @@ def confirm_package():
             flash('Package not found or not assigned to you', 'danger')
             return redirect(url_for('customer_dashboard'))
         
-        # Mark package as confirmed (progress = 1)
+        # Mark package as confirmed 
         cursor.execute("""
             UPDATE package 
             SET status = 'confirmed' 
@@ -853,10 +851,15 @@ def confirm_package():
         SET wallet = wallet - %s
         WHERE UID = %s
         """, (package_price, session['user_id']))
-
+        cursor.execute('SELECT max(PaymentID) as count FROM payment')
+        next_id = cursor.fetchone()['count']
+        if next_id == None:
+            next_id = 1
+        else:
+            next_id = int(next_id)+1
         cursor.execute('''
-            INSERT INTO payment (acc_number,amount,method,UID,purpose) VALUES (%s, %s, %s, %s, %s)
-            ''', (account_number, package_price, payment_method, session['user_id'], 'payment'))
+            INSERT INTO payment (acc_number,amount,method,UID,purpose,PaymentID) VALUES (%s, %s, %s, %s, %s)
+            ''', (account_number, package_price, payment_method, session['user_id'], 'payment',next_id))
         
         mysql.connection.commit()
         flash('Package confirmed successfully!', 'success')
