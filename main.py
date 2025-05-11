@@ -301,8 +301,8 @@ def warehouse_details():
             WarehouseID = request.form['WarehouseID']
             cursor.execute('''
                         SELECT *
-                        FROM warehouse w, package p
-                        WHERE w.WarehouseID = p.WarehouseID and w.WarehouseID = %s\
+                        FROM warehouse w, package p, user u
+                        WHERE w.WarehouseID = p.WarehouseID and p.CustomerID = u.UID and w.WarehouseID = %s
                         ''', (WarehouseID),)
             
             Details = cursor.fetchall()
