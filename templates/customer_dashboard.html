@@ -198,6 +198,40 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-12">
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5 class="card-title">Delivered Packages</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Package ID</th>
+                                            <th>Destination</th>
+                                            <th>Status</th>
+                                            <th>Remove</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for i in delivered_orders %}
+                                            <tr>
+                                                <td>{{ i.PackageID }}</td>
+                                                <td>{{ i.D_houseNo }}, {{ i.D_street }}, {{ i.D_city }}</td>
+                                                <td>{{ i.status }}</td>
+                                                <td>
+                                                    <form method="POST" action="/remove_package">
+                                                        <input type="hidden" name="package_id" value="{{ i.PackageID }}">
+                                                        <button type="submit" class="btn btn-danger">Remove</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

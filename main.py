@@ -357,12 +357,48 @@ def customer_dashboard():
 
     cursor.execute('''
                     SELECT * FROM package p
-                    WHERE p.PackageID and p.customerID = %s
+                    WHERE p.PackageID and p.customerID = %s and p.status != 'finished'
                    ''', (session['user_id'],))
     unconfirmed_orders = cursor.fetchall()
+
+    cursor.execute('''
+                   SELECT * FROM package p
+                    WHERE p.PackageID and p.customerID = %s and p.status = 'finished'
+                   ''', (session['user_id'],))
+    finished_orders = cursor.fetchall()
     
     cursor.close()
-    return render_template('customer_dashboard.html', customer = customer, unconfirmed_orders = unconfirmed_orders)
+    return render_template('customer_dashboard.html', customer = customer, unconfirmed_orders = unconfirmed_orders,finished_orders = finished_orders)
+
+#remove package
+@app.route('/remove_package', methods=['POST'])
+def remove_package():
+    if 'user_id' not in session:
+        flash('Please login first', 'error')
+        return redirect(url_for('login'))
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    package_id = request.form['package_id']
+    try:
+        # Check if package exists
+        cursor.execute('SELECT * FROM package WHERE PackageID = %s AND customerID = %s', (package_id, session['user_id']))
+        package = cursor.fetchone()
+        
+        if not package:
+            flash('Package not found or not assigned to you', 'danger')
+            return redirect(url_for('customer_dashboard'))
+        
+        # Delete the package
+        cursor.execute('DELETE FROM package WHERE PackageID = %s', (package_id,))
+        mysql.connection.commit()
+        flash('Package removed successfully!', 'success')
+    
+    except Exception as e:
+        mysql.connection.rollback()
+        flash(f'Error removing package: {str(e)}', 'danger')
+    
+    finally:
+        cursor.close()
+
 
 ## Courier Dashboard
 @app.route('/courier_dashboard')
@@ -561,12 +597,10 @@ def update_profile():
         # Update user table
         cursor.execute('''
                         UPDATE user SET 
-                        name = %s, 
-                        email = %s 
+                        name = %s
                         WHERE UID = %s
                        ''', (
             request.form['name'],
-            request.form['email'],
             session['user_id']
         ))
         
